@@ -65,7 +65,6 @@ This should be correctly set already, but under Obsidian -> Settings -> Files an
 2. `Use [[Wikilinks]]` is disabled
 3. `Detect all file extensions` is enabled (so you can easily view code and drop links to code files)
 
-![](media/obsidian_settings.png)
 
 # Exercise 0 
 
@@ -103,7 +102,6 @@ You can **include** other documents to embed their contents, allowing you to com
 
 Drag and drop `concept-design-overview` into the body of `understanding-concepts`. This should show up as a normal link. Then, to make it a link that Context will include, simply add the `@` sign to the beginning of the link text (the part in the brackets), like so:
 
-![](media/linking.png)
 
 **Important:** includes should be on their own paragraph - make sure that there's an empty line between them and other content. 
 
@@ -111,7 +109,6 @@ Next, type `# question: ...` and fill in any question you have about concepts, t
 
 **Tip:** you can easily get the relative link you need to paste into a terminal after `./ctx prompt` by right/ctrl clicking the file in the explorer directly:
 
-![](media/relative_linking.png)
 
 ## 3. Viewing context
 
