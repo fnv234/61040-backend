@@ -1,7 +1,8 @@
-# Understanding-Concepts
-[@concept-design-overview](../background/concept-design-overview.md)
-
-# question: where would i add a new concept in concepts?
+---
+timestamp: 'Wed Oct 08 2025 15:54:55 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251008_155455.d4d37d33.md]]'
+content_id: 2f179b0980fe3d39157ef2a2415476700f0eba2e453ccda64ce2e4304997b9c9
+---
 
 # response:
 
@@ -24,9 +25,9 @@ The text states, "A concept will generally be implemented as a backend service."
 **4. By Specifying its State, Behavior (API), and Human Behavioral Protocol:**
 
 Once you've identified the need for a new concept, you would "add" it by:
-    * **Defining its state:** What information does this concept need to maintain? (e.g., for a new `Rating` concept, you might need to store the item being rated and the user who rated it).
-    * **Specifying its API:** What actions can be performed on or by this concept? This forms its "human behavioral protocol" from the user's perspective and its API from the developer's perspective.
-    * **Ensuring it's independent:** This is a crucial aspect. A new concept should be designed without relying on the internal workings of other concepts.
+\* **Defining its state:** What information does this concept need to maintain? (e.g., for a new `Rating` concept, you might need to store the item being rated and the user who rated it).
+\* **Specifying its API:** What actions can be performed on or by this concept? This forms its "human behavioral protocol" from the user's perspective and its API from the developer's perspective.
+\* **Ensuring it's independent:** This is a crucial aspect. A new concept should be designed without relying on the internal workings of other concepts.
 
 **5. Potentially as a New Entry in a "Concept Catalog":**
 
