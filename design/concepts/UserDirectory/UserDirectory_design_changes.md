@@ -1,0 +1,110 @@
+# UserDirectory Concept Design Changes
+
+## Overview
+This document outlines the changes made to the UserDirectory concept during implementation and testing.
+
+## Major Changes
+
+### 1. Database Integration
+**Original Design**: In-memory data structures for user management
+**Implementation**: MongoDB `Collection<User>` with async operations
+
+**Changes Made**:
+- Converted to MongoDB collection-based storage
+- Made all methods async to handle database operations
+- Added proper error handling with `{error: string}` return types
+
+### 2. User State Management
+**Original Design**: Basic user data structure
+**Implementation**: Comprehensive user state with saved places and preferences
+
+**Changes Made**:
+- Enhanced user data structure with `savedPlaces` and `preferences` fields
+- Implemented proper initialization of empty arrays and objects
+- Added validation for required fields
+
+### 3. Saved Places Management
+**Original Design**: Basic place saving functionality
+**Implementation**: Robust saved places management with duplicate prevention
+
+**Changes Made**:
+- Added `save_place` method with duplicate prevention
+- Implemented `unsave_place` method with proper validation
+- Added `get_saved_places` query method
+
+### 4. Preferences System
+**Original Design**: Basic preferences handling
+**Implementation**: Flexible preferences system with complete replacement
+
+**Changes Made**:
+- Added `update_preferences` method
+- Implemented complete preferences replacement (not merging)
+- Added proper validation for user existence
+
+## Issues Resolved
+
+### 1. User Registration Validation
+**Issue**: Need to validate required fields and prevent duplicates
+**Solution**: Added comprehensive validation for displayName, email, and userId uniqueness
+
+### 2. Saved Places Duplicate Handling
+**Issue**: Need to prevent duplicate saved places
+**Solution**: Implemented idempotent save operation that doesn't add duplicates
+
+### 3. Preferences Update Logic
+**Issue**: Need to clarify whether preferences merge or replace
+**Solution**: Implemented complete replacement for simplicity and predictability
+
+### 4. Error Handling Consistency
+**Issue**: Need consistent error handling across all methods
+**Solution**: Standardized error returns with descriptive messages
+
+## Testing Coverage
+
+The implementation includes comprehensive test coverage:
+- **User Registration**: Test successful creation and validation requirements
+- **Duplicate Prevention**: Test registration with existing userId
+- **Field Validation**: Test empty displayName and email handling
+- **Saved Places**: Test adding, removing, and retrieving saved places
+- **Duplicate Places**: Test that saving the same place twice doesn't create duplicates
+- **Preferences**: Test updating and retrieving user preferences
+- **User Isolation**: Test that users maintain independent state
+
+## Key Features
+
+### 1. Robust User Management
+- Unique user identification
+- Comprehensive validation for required fields
+- Proper error handling for non-existent users
+
+### 2. Flexible Saved Places System
+- Add and remove places from saved list
+- Prevent duplicate entries
+- Retrieve complete saved places list
+
+### 3. Preferences Management
+- Complete preferences replacement
+- Flexible key-value structure
+- Proper validation and error handling
+
+### 4. Data Integrity
+- User state isolation
+- Consistent error handling
+- Proper initialization of empty collections
+
+## User State Structure
+
+Each user document contains:
+- `_id`: Unique user identifier
+- `displayName`: User's display name
+- `email`: User's email address
+- `savedPlaces`: Array of saved place IDs
+- `preferences`: Object with user preferences as key-value pairs
+
+## Error Handling
+
+The concept uses consistent error handling:
+- Business logic errors return `{error: string}` objects
+- Validation errors provide descriptive messages
+- Non-existent user errors are handled gracefully
+- All operations validate user existence before proceeding
