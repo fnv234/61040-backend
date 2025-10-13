@@ -1,0 +1,184 @@
+import { assertEquals } from "jsr:@std/assert";
+import { testDb } from "@utils/database.ts";
+import RecommendationEngineConcept from "./RecommendationEngineConcept.ts";
+import { ID } from "@utils/types.ts";
+
+// Type alias for Place to match the concept
+type Place = ID;
+
+Deno.test("RecommendationEngine", async (t) => {
+  const [db, client] = await testDb();
+
+  const recommendationEngine = new RecommendationEngineConcept(db);
+
+  const userA = "user:Alice" as ID;
+  const userB = "user:Bob" as ID;
+
+  const place1 = "place:RestaurantX" as ID;
+  const place2 = "place:CafeY" as ID;
+  const place3 = "place:ParkZ" as ID;
+  const place4 = "place:MuseumA" as ID;
+
+  await t.step("initial state: no recommendations", async () => {
+    const recommendations = await recommendationEngine
+      ._get_user_recommendations({ userId: userA });
+    assertEquals(recommendations.places, []);
+  });
+
+  await t.step(
+    "principle: recommendations are computed and cached",
+    async () => {
+      const savedPlaces = [place1, place2] as Place[];
+      const preferences = new Map<string, string>([
+        ["cuisine", "italian"],
+        ["ambiance", "cozy"],
+      ]);
+      const triedPlaces = [place3] as Place[];
+
+      // First refresh should compute and cache
+      await recommendationEngine.refresh_recommendations({
+        userId: userA,
+        savedPlaces,
+        preferences,
+        triedPlaces,
+      });
+
+      const currentRecommendations = await recommendationEngine
+        ._get_user_recommendations({ userId: userA });
+      // The compute_suggestions logic returns all non-tried places, prioritized by saved.
+      // So for the given inputs, it should return [place1, place2, place4] (assuming place4 is not in triedPlaces)
+      // The order of place1 and place2 might vary based on how compute_suggestions is implemented if they are both saved.
+      // Let's assume compute_suggestions returns saved first, then others.
+      assertEquals(
+        currentRecommendations.places.sort(),
+        [place1, place2, place4].sort(),
+      );
+
+      const lastUpdated = await recommendationEngine._get_last_updated({
+        userId: userA,
+      });
+      assertEquals(lastUpdated.timestamp instanceof Date, true);
+
+      // Get recommendations again, should use cache
+      const cachedRecommendations = await recommendationEngine
+        .get_recommendations({ userId: userA });
+      assertEquals(
+        cachedRecommendations.places.sort(),
+        [place1, place2, place4].sort(),
+      );
+    },
+  );
+
+  await t.step(
+    "principle: recommendations refresh when user behavior changes warrant",
+    async () => {
+      // Simulate time passing to make recommendations stale (this test doesn't actually mock time,
+      // but we'll simulate a refresh due to new tried places)
+
+      const savedPlaces = [place1, place2] as Place[];
+      const preferences = new Map<string, string>([
+        ["cuisine", "italian"],
+        ["ambiance", "cozy"],
+      ]);
+      const triedPlaces = [place3, place4] as Place[]; // Add place4 to triedPlaces
+
+      // Refreshing with new tried places should update recommendations
+      await recommendationEngine.refresh_recommendations({
+        userId: userA,
+        savedPlaces,
+        preferences,
+        triedPlaces,
+      });
+
+      const currentRecommendations = await recommendationEngine
+        ._get_user_recommendations({ userId: userA });
+      // Now, place4 should be excluded, and only place1, place2 should remain.
+      assertEquals(
+        currentRecommendations.places.sort(),
+        [place1, place2].sort(),
+      );
+
+      const lastUpdatedAfterRefresh = await recommendationEngine
+        ._get_last_updated({ userId: userA });
+      // The timestamp should have updated
+      assertEquals(
+        lastUpdatedAfterRefresh.timestamp.getTime() >
+          new Date().getTime() - 1000,
+        true,
+      ); // Allow for small timing differences
+    },
+  );
+
+  await t.step("get_recommendations fetches fresh if stale", async () => {
+    // To test this properly, we would need to mock Date or manipulate the lastUpdated timestamp directly.
+    // For now, we'll simulate by manually setting recommendations and then "expecting" a refresh by
+    // calling get_recommendations with a slightly different context that _would_ trigger a refresh
+    // if time had passed.
+
+    const userB_savedPlaces = [place4] as Place[];
+    const userB_preferences = new Map<string, string>();
+    const userB_triedPlaces = [place1] as Place[];
+
+    // Manually seed some recommendations for userB and set last updated far in the past
+    await recommendationEngine.recommendations.insertOne({
+      _id: userB,
+      places: ["place:X" as ID, "place:Y" as ID],
+    });
+    await recommendationEngine.lastUpdated.insertOne({
+      _id: userB,
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+    }); // 2 days ago
+
+    // Calling get_recommendations should now compute fresh ones because the timestamp is old
+    const freshRecommendations = await recommendationEngine.get_recommendations(
+      { userId: userB },
+    );
+    // compute_suggestions for userB with these inputs should return all places since placeholders are empty
+    assertEquals(
+      freshRecommendations.places.sort(),
+      ["place:CafeY", "place:MuseumA", "place:ParkZ", "place:RestaurantX"]
+        .sort(),
+    );
+  });
+
+  await t.step("clear_recommendations removes user data", async () => {
+    const savedPlaces = [place1] as Place[];
+    const preferences = new Map<string, string>();
+    const triedPlaces = [] as Place[];
+
+    await recommendationEngine.refresh_recommendations({
+      userId: userA,
+      savedPlaces,
+      preferences,
+      triedPlaces,
+    });
+    let recommendations = await recommendationEngine._get_user_recommendations({
+      userId: userA,
+    });
+    assertEquals(recommendations.places.length, 1);
+
+    await recommendationEngine.clear_recommendations({ userId: userA });
+
+    recommendations = await recommendationEngine._get_user_recommendations({
+      userId: userA,
+    });
+    assertEquals(recommendations.places, []);
+
+    try {
+      await recommendationEngine._get_last_updated({ userId: userA });
+      // If we reach here, it means _get_last_updated did not throw, which is an error.
+      assertEquals(
+        true,
+        false,
+        "Expected _get_last_updated to throw after clear_recommendations",
+      );
+    } catch (e) {
+      assertEquals(
+        (e as Error).message.includes("No last updated timestamp found"),
+        true,
+      );
+    }
+  });
+
+  await client.close();
+});

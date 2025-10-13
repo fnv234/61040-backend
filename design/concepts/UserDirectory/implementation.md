@@ -1,0 +1,443 @@
+[@concept-design-overview](../../background/concept-design-overview.md)
+
+[@concept-specifications](../../background/concept-specifications.md)
+
+[@implementing-concepts](../../background/implementing-concepts.md)
+
+[@no_mistakes](../../no_mistakes.md)
+
+
+# implement: UserDirectory
+
+# concept: UserDirectory
+
+* **concept** UserDirectory
+
+* **purpose** represent app users with identity, preferences, and saved places
+
+* **principle** each user maintains independent saved places and preferences 
+
+* **state**  
+
+    a set of Users with
+        a userId UserId
+        a displayName String
+        an email String
+        preferences Map[String, String]
+        savedPlaces set PlaceId
+
+* **actions**  
+
+    register_user(userId: UserId, displayName: String, email: String): UserId
+        **requires** userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
+        **effects** adds new User with given attributes and empty savedPlaces, preferences to the set of Users
+
+    save_place(userId: UserId, placeId: PlaceId)
+        **requires** userId in {u.userId | u in the set of Users}
+        **effects** update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces + {placeId}
+
+    unsave_place(userId: UserId, placeId: PlaceId)
+        **requires** userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
+        **effects** update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
+
+    update_preferences(userId: UserId, newPrefs: Map[String, String])
+        **requires** userId in {u.userId | u in the set of Users}
+        **effects** update user u where u.userId = userId: u.preferences' = newPrefs
+
+    get_saved_places(userId: UserId): set PlaceId
+        **requires** userId in {u.userId | u in the set of Users}
+        **effects** return u.savedPlaces where u.userId = userId
+
+
+# file: src/UserDirectory/UserDirectoryConcept.ts
+# response:
+
+```typescript
+import { Collection, Db, WithId } from "npm:mongodb";
+import { Empty, ID } from "@utils/types.ts";
+
+// Generic types of this concept
+type UserId = ID;
+type PlaceId = ID;
+
+// Constants for collection names
+const USERS_COLLECTION = "UserDirectory.users";
+
+/**
+ * Represents a user in the UserDirectory concept.
+ */
+interface User {
+  _id: UserId; // This corresponds to userId in the specification
+  displayName: string;
+  email: string;
+  preferences: Record<string, string>;
+  savedPlaces: PlaceId[];
+}
+
+export default class UserDirectoryConcept {
+  private users: Collection<User>;
+
+  constructor(private readonly db: Db) {
+    this.users = this.db.collection(USERS_COLLECTION);
+  }
+
+  /**
+   * Registers a new user with the provided details.
+   * @param userId The unique identifier for the user.
+   * @param displayName The display name of the user.
+   * @param email The email address of the user.
+   * @returns The userId of the newly registered user.
+   */
+  async register_user({
+    userId,
+    displayName,
+    email,
+  }: {
+    userId: UserId;
+    displayName: string;
+    email: string;
+  }): Promise<UserId> {
+    // requires: userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
+    const existingUser = await this.users.findOne({ _id: userId });
+    if (existingUser) {
+      return { error: `User with userId ${userId} already exists.` } as unknown as UserId;
+    }
+    if (!displayName || !email) {
+      return { error: "DisplayName and email cannot be empty." } as unknown as UserId;
+    }
+
+    const newUser: User = {
+      _id: userId,
+      displayName,
+      email,
+      preferences: {}, // initialized as empty
+      savedPlaces: [], // initialized as empty
+    };
+
+    // effects: adds new User with given attributes and empty savedPlaces, preferences to the set of Users
+    await this.users.insertOne(newUser);
+    return userId;
+  }
+
+  /**
+   * Saves a place for a given user.
+   * @param userId The ID of the user.
+   * @param placeId The ID of the place to save.
+   * @returns An empty object if successful, or an error object.
+   */
+  async save_place({
+    userId,
+    placeId,
+  }: {
+    userId: UserId;
+    placeId: PlaceId;
+  }): Promise<Empty> {
+    // requires: userId in {u.userId | u in the set of Users}
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+
+    // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces + {placeId}
+    if (user.savedPlaces.includes(placeId)) {
+      // Place is already saved, no change needed, but not an error.
+      return {};
+    }
+    await this.users.updateOne(
+      { _id: userId },
+      { $push: { savedPlaces: placeId } }
+    );
+    return {};
+  }
+
+  /**
+   * Unsaves a place for a given user.
+   * @param userId The ID of the user.
+   * @param placeId The ID of the place to unsave.
+   * @returns An empty object if successful, or an error object.
+   */
+  async unsave_place({
+    userId,
+    placeId,
+  }: {
+    userId: UserId;
+    placeId: PlaceId;
+  }): Promise<Empty> {
+    // requires: userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+    if (!user.savedPlaces.includes(placeId)) {
+      return { error: `PlaceId ${placeId} not found in saved places for user ${userId}.` };
+    }
+
+    // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
+    await this.users.updateOne(
+      { _id: userId },
+      { $pull: { savedPlaces: placeId } }
+    );
+    return {};
+  }
+
+  /**
+   * Updates the preferences for a given user.
+   * @param userId The ID of the user.
+   * @param newPrefs The new preferences map.
+   * @returns An empty object if successful, or an error object.
+   */
+  async update_preferences({
+    userId,
+    newPrefs,
+  }: {
+    userId: UserId;
+    newPrefs: Record<string, string>;
+  }): Promise<Empty> {
+    // requires: userId in {u.userId | u in the set of Users}
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+
+    // effects: update user u where u.userId = userId: u.preferences' = newPrefs
+    await this.users.updateOne(
+      { _id: userId },
+      { $set: { preferences: newPrefs } }
+    );
+    return {};
+  }
+
+  /**
+   * Retrieves the saved places for a given user.
+   * @param userId The ID of the user.
+   * @returns A set of PlaceIds, or an error object.
+   */
+  async get_saved_places({ userId }: { userId: UserId }): Promise<PlaceId[] | { error: string }> {
+    // requires: userId in {u.userId | u in the set of Users}
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+
+    // effects: return u.savedPlaces where u.userId = userId
+    return user.savedPlaces;
+  }
+}
+```
+# response:
+
+# concept: UserDirectory
+
+* **concept** UserDirectory
+
+* **purpose** represent app users with identity, preferences, and saved places
+
+* **principle** each user maintains independent saved places and preferences
+
+* **state**
+
+  a set of Users with
+  a userId UserId
+  a displayName String
+  an email String
+  preferences Map\[String, String]
+  savedPlaces set PlaceId
+
+* **actions**
+
+  register\_user(userId: UserId, displayName: String, email: String): UserId
+  **requires** userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
+  **effects** adds new User with given attributes and empty savedPlaces, preferences to the set of Users
+
+  save\_place(userId: UserId, placeId: PlaceId)
+  **requires** userId in {u.userId | u in the set of Users}
+  **effects** update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces + {placeId}
+
+  unsave\_place(userId: UserId, placeId: PlaceId)
+  **requires** userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
+  **effects** update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
+
+  update\_preferences(userId: UserId, newPrefs: Map\[String, String])
+  **requires** userId in {u.userId | u in the set of Users}
+  **effects** update user u where u.userId = userId: u.preferences' = newPrefs
+
+  get\_saved\_places(userId: UserId): set PlaceId
+  **requires** userId in {u.userId | u in the set of Users}
+  **effects** return u.savedPlaces where u.userId = userId
+
+# file: src/UserDirectory/UserDirectoryConcept.ts
+
+# response:
+
+```typescript
+import { Collection, Db, WithId } from "npm:mongodb";
+import { Empty, ID } from "@utils/types.ts";
+
+// Generic types of this concept
+type UserId = ID;
+type PlaceId = ID;
+
+// Constants for collection names
+const USERS_COLLECTION = "UserDirectory.users";
+
+/**
+ * Represents a user in the UserDirectory concept.
+ */
+interface User {
+  _id: UserId; // This corresponds to userId in the specification
+  displayName: string;
+  email: string;
+  preferences: Record<string, string>;
+  savedPlaces: PlaceId[];
+}
+
+export default class UserDirectoryConcept {
+  private users: Collection<User>;
+
+  constructor(private readonly db: Db) {
+    this.users = this.db.collection(USERS_COLLECTION);
+  }
+
+  /**
+   * Registers a new user with the provided details.
+   * @param userId The unique identifier for the user.
+   * @param displayName The display name of the user.
+   * @param email The email address of the user.
+   * @returns The userId of the newly registered user, or an error object.
+   */
+  async register_user({
+    userId,
+    displayName,
+    email,
+  }: {
+    userId: UserId;
+    displayName: string;
+    email: string;
+  }): Promise<UserId | { error: string }> {
+    // requires: userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
+    const existingUser = await this.users.findOne({ _id: userId });
+    if (existingUser) {
+      return { error: `User with userId ${userId} already exists.` };
+    }
+    if (!displayName || !email) {
+      return { error: "DisplayName and email cannot be empty." };
+    }
+
+    const newUser: User = {
+      _id: userId,
+      displayName,
+      email,
+      preferences: {}, // initialized as empty
+      savedPlaces: [], // initialized as empty
+    };
+
+    // effects: adds new User with given attributes and empty savedPlaces, preferences to the set of Users
+    await this.users.insertOne(newUser);
+    return userId;
+  }
+
+  /**
+   * Saves a place for a given user.
+   * @param userId The ID of the user.
+   * @param placeId The ID of the place to save.
+   * @returns An empty object if successful, or an error object.
+   */
+  async save_place({
+    userId,
+    placeId,
+  }: {
+    userId: UserId;
+    placeId: PlaceId;
+  }): Promise<Empty | { error: string }> {
+    // requires: userId in {u.userId | u in the set of Users}
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+
+    // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces + {placeId}
+    if (user.savedPlaces.includes(placeId)) {
+      // Place is already saved, no change needed, but not an error.
+      return {};
+    }
+    await this.users.updateOne(
+      { _id: userId },
+      { $push: { savedPlaces: placeId } }
+    );
+    return {};
+  }
+
+  /**
+   * Unsaves a place for a given user.
+   * @param userId The ID of the user.
+   * @param placeId The ID of the place to unsave.
+   * @returns An empty object if successful, or an error object.
+   */
+  async unsave_place({
+    userId,
+    placeId,
+  }: {
+    userId: UserId;
+    placeId: PlaceId;
+  }): Promise<Empty | { error: string }> {
+    // requires: userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+    if (!user.savedPlaces.includes(placeId)) {
+      return { error: `PlaceId ${placeId} not found in saved places for user ${userId}.` };
+    }
+
+    // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
+    await this.users.updateOne(
+      { _id: userId },
+      { $pull: { savedPlaces: placeId } }
+    );
+    return {};
+  }
+
+  /**
+   * Updates the preferences for a given user.
+   * @param userId The ID of the user.
+   * @param newPrefs The new preferences map.
+   * @returns An empty object if successful, or an error object.
+   */
+  async update_preferences({
+    userId,
+    newPrefs,
+  }: {
+    userId: UserId;
+    newPrefs: Record<string, string>;
+  }): Promise<Empty | { error: string }> {
+    // requires: userId in {u.userId | u in the set of Users}
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+
+    // effects: update user u where u.userId = userId: u.preferences' = newPrefs
+    await this.users.updateOne(
+      { _id: userId },
+      { $set: { preferences: newPrefs } }
+    );
+    return {};
+  }
+
+  /**
+   * Retrieves the saved places for a given user.
+   * @param userId The ID of the user.
+   * @returns A set of PlaceIds, or an error object.
+   */
+  async get_saved_places({ userId }: { userId: UserId }): Promise<PlaceId[] | { error: string }> {
+    // requires: userId in {u.userId | u in the set of Users}
+    const user = await this.users.findOne({ _id: userId });
+    if (!user) {
+      return { error: `User with userId ${userId} not found.` };
+    }
+
+    // effects: return u.savedPlaces where u.userId = userId
+    return user.savedPlaces;
+  }
+}
+```
