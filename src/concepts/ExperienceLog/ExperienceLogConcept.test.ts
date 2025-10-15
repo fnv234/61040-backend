@@ -1,5 +1,5 @@
 import { testDb } from "@utils/database.ts";
-import { assertEquals, assertThrows } from "jsr:@std/assert";
+import { assertEquals } from "jsr:@std/assert";
 import ExperienceLogConcept from "./ExperienceLogConcept.ts";
 import { mockLLM } from "../../../gemini-llm.ts";
 
@@ -369,5 +369,3 @@ Deno.test("ExperienceLog - AI Profile Summary", async (t) => {
 
   await client.close();
 });
-
-// Remove the duplicate mockLLM function since it's now imported
