@@ -11,7 +11,6 @@ See [Concepts](./design/concepts/)
 
 # Setup (Prep)
 
-
 ### Task:
 
 In `design/brainstorming/questioning.md`, complete the `# prompt: Why ... ?` with your burning question for the universe. Then, from the root of the repository, run this command in the terminal (if you're using Obsidian, you should be able to copy the command by clicking on `Shell` in the top right):
