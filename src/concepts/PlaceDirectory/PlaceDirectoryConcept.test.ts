@@ -10,21 +10,7 @@ Deno.test("PlaceDirectoryConcept", async (t) => {
   const placeDirectory = new PlaceDirectoryConcept(db);
   
   try {
-    // Clear database before each test to ensure clean state
     await db.collection("PlaceDirectory.places").deleteMany({});
-
-  // // Helper function to handle place creation and get details
-  // const createPlaceAndGetDetails = async (placeData: any) => {
-  //   const placeId = await placeDirectory.create_place(placeData);
-  //   if (typeof placeId === 'object' && 'error' in placeId) {
-  //     throw new Error(`Failed to create place: ${placeId.error}`);
-  //   }
-  //   const details = await placeDirectory.get_details({ placeId });
-  //   if (typeof details === 'object' && 'error' in details) {
-  //     throw new Error(`Failed to get place details: ${details.error}`);
-  //   }
-  //   return { placeId, details };
-  // };
 
   await t.step("create_place - successful creation", async () => {
     const placeId = await placeDirectory.create_place({

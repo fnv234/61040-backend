@@ -66,9 +66,9 @@ export default class ExperienceLogConcept {
   async updateLog(logId: LogId, updates: Partial<Log>): Promise<Log> {
     const result = await this.logs.updateOne(
       { _id: logId },
-      { $set: updates }
+      { $set: updates },
     );
-    
+
     if (result.matchedCount === 0) {
       throw new Error("Log not found");
     }
@@ -152,9 +152,9 @@ export default class ExperienceLogConcept {
         - Mention only places listed above (no new ones).
         - If ratings for a place are both high and low, describe it as a mixed experience rather than consistent.
         - Base tone on the average rating:
-        - below 3 → critical or neutral tone,
-        - around 3 → balanced tone,
-        - above 3 → positive tone.
+        - below 3 -> critical or neutral tone,
+        - around 3 -> balanced tone,
+        - above 3 -> positive tone.
         - Highlight consistent preferences (sweetness/strength).
         - Avoid exaggeration or assumptions beyond the data.
         - Keep <= 3 sentences.
