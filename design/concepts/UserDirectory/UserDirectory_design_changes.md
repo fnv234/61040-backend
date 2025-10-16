@@ -5,6 +5,8 @@ This document outlines the changes made to the UserDirectory concept during impl
 
 ## Major Changes
 
+I removed get_tried_places according to feedback that specified this as a breach of modularity between my concepts. Next, I go into detail about other changes:
+
 ### 1. Database Integration
 **Original Design**: In-memory data structures for user management
 **Implementation**: MongoDB `Collection<User>` with async operations

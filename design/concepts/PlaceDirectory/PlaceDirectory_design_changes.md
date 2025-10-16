@@ -3,7 +3,9 @@
 ## Overview
 This document outlines the changes made to the PlaceDirectory concept during implementation and testing.
 
+
 ## Major Changes
+Added edit_place, delete_place, and filter_places. Next, I go into detail about other changes:
 
 ### 1. Database Integration
 **Original Design**: In-memory data structures

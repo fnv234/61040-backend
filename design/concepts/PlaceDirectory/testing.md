@@ -401,7 +401,7 @@ Deno.test("PlaceDirectoryConcept", async (t) => {
 
   await client.close();
 });
-
+```
 # trace:
 /*
 1. **Create a place**: Use `create_place` to add a new matcha-serving location with specific details.
@@ -413,4 +413,3 @@ Deno.test("PlaceDirectoryConcept", async (t) => {
 7. **Delete a place**: Use `delete_place` to remove a place. Attempt to retrieve its details to confirm it's gone.
 8. **Test error conditions**: Ensure that actions like `create_place` with invalid inputs, or operations on non-existent places, throw appropriate errors.
 */
-```
