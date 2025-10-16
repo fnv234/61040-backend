@@ -86,7 +86,7 @@ export default class UserDirectoryConcept {
    * @param userId The unique identifier for the user.
    * @param displayName The display name of the user.
    * @param email The email address of the user.
-   * @returns The userId of the newly registered user.
+   * @returns The userId of the newly registered user, or an error object.
    */
   async register_user({
     userId,
@@ -96,14 +96,14 @@ export default class UserDirectoryConcept {
     userId: UserId;
     displayName: string;
     email: string;
-  }): Promise<UserId> {
+  }): Promise<UserId | { error: string }> {
     // requires: userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
     const existingUser = await this.users.findOne({ _id: userId });
     if (existingUser) {
-      return { error: `User with userId ${userId} already exists.` } as unknown as UserId;
+      return { error: `User with userId ${userId} already exists.` };
     }
     if (!displayName || !email) {
-      return { error: "DisplayName and email cannot be empty." } as unknown as UserId;
+      return { error: "DisplayName and email cannot be empty." };
     }
 
     const newUser: User = {
@@ -131,7 +131,7 @@ export default class UserDirectoryConcept {
   }: {
     userId: UserId;
     placeId: PlaceId;
-  }): Promise<Empty> {
+  }): Promise<Empty | { error: string }> {
     // requires: userId in {u.userId | u in the set of Users}
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
@@ -145,7 +145,7 @@ export default class UserDirectoryConcept {
     }
     await this.users.updateOne(
       { _id: userId },
-      { $push: { savedPlaces: placeId } }
+      { $push: { savedPlaces: placeId } },
     );
     return {};
   }
@@ -162,20 +162,23 @@ export default class UserDirectoryConcept {
   }: {
     userId: UserId;
     placeId: PlaceId;
-  }): Promise<Empty> {
+  }): Promise<Empty | { error: string }> {
     // requires: userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
       return { error: `User with userId ${userId} not found.` };
     }
     if (!user.savedPlaces.includes(placeId)) {
-      return { error: `PlaceId ${placeId} not found in saved places for user ${userId}.` };
+      return {
+        error:
+          `PlaceId ${placeId} not found in saved places for user ${userId}.`,
+      };
     }
 
     // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
     await this.users.updateOne(
       { _id: userId },
-      { $pull: { savedPlaces: placeId } }
+      { $pull: { savedPlaces: placeId } },
     );
     return {};
   }
@@ -192,7 +195,7 @@ export default class UserDirectoryConcept {
   }: {
     userId: UserId;
     newPrefs: Record<string, string>;
-  }): Promise<Empty> {
+  }): Promise<Empty | { error: string }> {
     // requires: userId in {u.userId | u in the set of Users}
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
@@ -202,7 +205,7 @@ export default class UserDirectoryConcept {
     // effects: update user u where u.userId = userId: u.preferences' = newPrefs
     await this.users.updateOne(
       { _id: userId },
-      { $set: { preferences: newPrefs } }
+      { $set: { preferences: newPrefs } },
     );
     return {};
   }
@@ -212,7 +215,9 @@ export default class UserDirectoryConcept {
    * @param userId The ID of the user.
    * @returns A set of PlaceIds, or an error object.
    */
-  async get_saved_places({ userId }: { userId: UserId }): Promise<PlaceId[] | { error: string }> {
+  async get_saved_places(
+    { userId }: { userId: UserId },
+  ): Promise<PlaceId[] | { error: string }> {
     // requires: userId in {u.userId | u in the set of Users}
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
