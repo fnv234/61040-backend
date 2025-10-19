@@ -5,6 +5,8 @@ This document outlines the key changes made to the overall application design du
 
 ## Major Design Changes
 
+Firstly, see the concept-specific changes in the concept-specific design changes documents. Also, here are some additional notes:
+
 ### 1. Database Integration Refactoring
 **Change**: Converted all concepts from in-memory data structures to MongoDB persistence.
 **Impact**: All concepts now use MongoDB collections for state management, requiring async/await patterns throughout the codebase.
@@ -76,9 +78,9 @@ This document outlines the key changes made to the overall application design du
    - **Cleanup pattern**: [context/design/concepts/RecommendationEngine/testing.md/20251019_102239.d7bd1e95.md](../context/design/concepts/RecommendationEngine/testing.md/20251019_102239.d7bd1e95.md) - Implementing database cleanup in tests
 
 9. **AI Validation Robustness**: The ExperienceLog's AI-generated summary validation was too strict for testing. I simplified the validation tests to check for error presence rather than exact error messages, making tests more resilient to minor variations.
-   - **Moment captured**: [context/design/concepts/ExperienceLog/testing.md/20251019_091755.b5ef85e9.md](../context/design/concepts/ExperienceLog/testing.md/20251019_091755.b5ef85e9.md) - Adjusting validation tests for robustness
-   - **Validation logic**: [context/design/concepts/ExperienceLog/ExperienceLog_design_changes.md/20251019_091150.d9f31288.md](../context/design/concepts/ExperienceLog/ExperienceLog_design_changes.md/20251019_091150.d9f31288.md) - Design changes for validation approach
+   - **Moment captured**: [context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md](../context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md) vs. [context/design/concepts/ExperienceLog/testing.md/steps/response.6d76b65d.md](..context/design/concepts/ExperienceLog/testing.md/steps/response.6d76b65d.md) - Adjusting validation tests for robustness
+   - **Validation logic**: [context/design/concepts/ExperienceLog/ExperienceLog_design_changes.md/steps/_.e00a35b9.md](../context/design/concepts/ExperienceLog/ExperienceLog_design_changes.md/steps/_.e00a35b9.md) - Design changes for validation approach
 
 10. **Recommendation Algorithm Alignment**: The RecommendationEngine's `compute_suggestions` method needed alignment with test expectations. I refined the logic to handle specific test scenarios while maintaining the core recommendation functionality.
    - **Moment captured**: [context/design/concepts/RecommendationEngine/testing.md/20251012_210450.2c02c081.md](../context/design/concepts/RecommendationEngine/testing.md/20251012_210450.2c02c081.md) - Initial testing challenges
-   - **Refinement**: [context/design/concepts/RecommendationEngine/testing.md/20251019_102239.d7bd1e95.md](../context/design/concepts/RecommendationEngine/testing.md/20251019_102239.d7bd1e95.md) - Final test adjustments and algorithm alignment
+   - **Refinement**: [context/design/concepts/RecommendationEngine/testing.md/steps/response.ee5fbbbc.md](../context/design/concepts/RecommendationEngine/testing.md/steps/response.ee5fbbbc.md) - Final test adjustments and algorithm alignment
