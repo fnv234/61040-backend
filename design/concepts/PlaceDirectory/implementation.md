@@ -6,6 +6,7 @@
 
 [@no_mistakes](../../no_mistakes.md)
 
+## FOR REFERENCE - full implementation in src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts
 
 # implement: PlaceDirectory
 
@@ -13,9 +14,9 @@
 
 ```typescript
 import { Collection, Db } from "npm:mongodb";
-import { ID } from "@utils/types.ts"; 
+import { ID } from "@utils/types.ts";
 import { freshID } from "@utils/database.ts";
-import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
+import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts"; // Import the sync function
 
 // Generic types of this concept
 type PlaceId = ID;
@@ -44,14 +45,19 @@ export default class PlaceDirectoryConcept {
   }
 
   /**
-   * Adds a new place with the given attributes to the set of Places.
+   * create_place(name: String, address: String, coords: (Float, Float), styles: set String, priceRange: String, hours: String?): PlaceId
+   *
+   * **requires** name and address are non-empty
+   * **effects** adds new Place with placeId and all given attributes to the set of Places
+   *
    * @param name The name of the place.
    * @param address The address of the place.
    * @param coords The geographical coordinates of the place [longitude, latitude].
    * @param styles The set of preparation styles offered by the place.
    * @param priceRange The price range of the place.
    * @param hours The operating hours of the place (optional).
-   * @returns The unique identifier of the newly created place, or an error object.
+   * @param photos The set of photo URLs for the place (optional).
+   * @returns A dictionary with the unique identifier of the newly created place, or an error object.
    */
   async create_place({
     name,
@@ -69,7 +75,7 @@ export default class PlaceDirectoryConcept {
     priceRange: string;
     hours?: string;
     photos?: URL[];
-  }): Promise<PlaceId | { error: string }> {
+  }): Promise<{ placeId: PlaceId } | { error: string }> {
     if (!name || !address) {
       return { error: "Name and address must be non-empty." };
     }
@@ -90,23 +96,21 @@ export default class PlaceDirectoryConcept {
 
     // --- SYNC IMPLEMENTATION FOR GlobalPlaceRecommendationSync ---
     // When a new place is added, we need to re-evaluate recommendations for all users.
-    // This is a potentially expensive operation if you have many users.
-    // In a real-world scenario, you might want to use a job queue or a more sophisticated approach.
-    // For this example, we'll iterate through all users and trigger a refresh.
-
-    const allUsers = await this.db.collection("UserDirectory.users").find({}).toArray(); // Assuming user collection name
+    const userCollection = this.db.collection("UserDirectory.users");
+    const allUsers = await userCollection.find({}, { projection: { _id: 1 } }).toArray();
     for (const user of allUsers) {
-      // Trigger a refresh for each user.
-      // Note: This assumes refreshRecommendationsAfterNewLog can be called without a specific log event,
-      // which it currently can. If not, you might need a dedicated `triggerGlobalRefresh` function.
       await refreshRecommendationsAfterNewLog(this.db, user._id.toString() as ID);
     }
     // --- END SYNC IMPLEMENTATION ---
-    return placeId;
+    return { placeId };
   }
 
   /**
-   * Updates an existing place with the given attributes.
+   * edit_place(placeId: PlaceId, name: String?, address: String?, coords: (Float, Float)?, styles: set String?, priceRange: String?, hours: String?, photos: set URL?)
+   *
+   * **requires** placeId in {p.placeId | p in the set of Places}
+   * **effects** update place where p.placeId = placeId with any non-null parameters
+   *
    * @param placeId The ID of the place to update.
    * @param name The new name of the place (optional).
    * @param address The new address of the place (optional).
@@ -115,7 +119,7 @@ export default class PlaceDirectoryConcept {
    * @param priceRange The new price range of the place (optional).
    * @param hours The new operating hours of the place (optional).
    * @param photos The new set of photo URLs for the place (optional).
-   * @returns An empty object upon successful update, or an error object.
+   * @returns An empty dictionary upon successful update, or an error object.
    */
   async edit_place({
     placeId,
@@ -143,9 +147,11 @@ export default class PlaceDirectoryConcept {
     if (styles !== undefined) update.preparationStyles = styles;
     if (priceRange !== undefined) update.priceRange = priceRange;
     if (hours !== undefined) update.hours = hours;
-    // If photos is explicitly provided (even as an empty array), update it.
-    // If it's undefined, it means we don't touch the photos field.
     if (photos !== undefined) update.photos = photos;
+
+    if (Object.keys(update).length === 0) {
+      return { error: "No update fields provided." };
+    }
 
     const result = await this.places.updateOne({ _id: placeId }, { $set: update });
 
@@ -157,9 +163,13 @@ export default class PlaceDirectoryConcept {
   }
 
   /**
-   * Removes a place from the set of Places.
+   * delete_place(placeId: PlaceId)
+   *
+   * **requires** placeId in {p.placeId | p in the set of Places}
+   * **effects** removes p where p.placeId = placeId from the set of Places
+   *
    * @param placeId The ID of the place to delete.
-   * @returns An empty object upon successful deletion, or an error object.
+   * @returns An empty dictionary upon successful deletion, or an error object.
    */
   async delete_place(
     { placeId }: { placeId: PlaceId },
@@ -173,47 +183,81 @@ export default class PlaceDirectoryConcept {
     return {};
   }
 
-  async find_nearby({
+  /**
+   * _find_nearby(coords: (Float, Float), radius: Float): set PlaceId
+   *
+   * **requires** radius > 0
+   * **effects** return {p.placeId | p in the set of Places and distance(p.coordinates, coords) <= radius}
+   *
+   * @param coords The reference coordinates [longitude, latitude].
+   * @param radius The search radius in kilometers.
+   * @returns A dictionary with a set of PlaceIds that are nearby.
+   */
+  async _find_nearby({
     coords,
     radius,
   }: {
     coords: [number, number];
     radius: number;
-  }): Promise<PlaceId[]> {
+  }): Promise<{ placeIds: PlaceId[] } | { error: string }> {
     if (radius <= 0) {
-      throw new Error("Radius must be greater than 0."); // Keeping this as an actual throw, as it's a functional precondition violation.
+      return { error: "Radius must be greater than 0." };
     }
 
     // For testing purposes, use a simple distance calculation instead of MongoDB geospatial queries
-    // This avoids the need for geospatial indexes
+    // This avoids the need for geospatial indexes and configuration.
     const allPlaces = await this.places.find({}).toArray();
-    
-    const nearbyPlaces = allPlaces.filter(place => {
+
+    const nearbyPlaces = allPlaces.filter((place) => {
       const [lon1, lat1] = coords;
       const [lon2, lat2] = place.coordinates;
-      
-      // Simple distance calculation (not perfectly accurate but good enough for testing)
-      const distance = Math.sqrt(
-        Math.pow(lon2 - lon1, 2) + Math.pow(lat2 - lat1, 2)
-      ) * 111; // Rough conversion to km (1 degree ≈ 111 km)
-      
+
+      // Simple Euclidean distance approximation, scaled for rough km.
+      // (1 degree of latitude approx 111 km, longitude varies)
+      const dx = (lon2 - lon1) * Math.cos((lat1 + lat2) / 2 * Math.PI / 180); // Adjust for longitude scaling
+      const dy = lat2 - lat1;
+      const distance = Math.sqrt(dx * dx + dy * dy) * 111.32; // Approx km per degree
+
       return distance <= radius;
     });
 
-    return nearbyPlaces.map((p) => p._id);
+    return { placeIds: nearbyPlaces.map((p) => p._id) };
   }
 
-  async search_by_name({ query }: { query: string }): Promise<PlaceId[]> {
+  /**
+   * _search_by_name(query: String): set PlaceId
+   *
+   * **effects** return {p.placeId | p in the set of Places and query in p.name}
+   *
+   * @param query The search query string.
+   * @returns A dictionary with a set of PlaceIds matching the name query.
+   */
+  async _search_by_name(
+    { query }: { query: string },
+  ): Promise<{ placeIds: PlaceId[] }> {
     const results = await this.places
       .find({
         name: { $regex: query, $options: "i" }, // Case-insensitive search
       })
       .toArray();
 
-    return results.map((p) => p._id);
+    return { placeIds: results.map((p) => p._id) };
   }
 
-  async filter_places({
+  /**
+   * _filter_places(priceRange: String?, hours: String?, style: String?): set PlaceId
+   *
+   * **effects** return {p.placeId | p in the set of Places
+   *   and (priceRange = null or p.priceRange = priceRange)
+   *   and (hours = null or p.hours = hours)
+   *   and (style = null or style in p.preparationStyles)}
+   *
+   * @param priceRange The desired price range (optional).
+   * @param hours The desired operating hours (optional).
+   * @param style The desired preparation style (optional).
+   * @returns A dictionary with a set of PlaceIds matching the filter criteria.
+   */
+  async _filter_places({
     priceRange,
     hours,
     style,
@@ -221,8 +265,8 @@ export default class PlaceDirectoryConcept {
     priceRange?: string;
     hours?: string;
     style?: string;
-  }): Promise<PlaceId[]> {
-    const filter: any = {}; // Type 'any' is acceptable here given the dynamic nature of filters.
+  }): Promise<{ placeIds: PlaceId[] }> {
+    const filter: any = {};
 
     if (priceRange !== undefined && priceRange !== null) {
       filter.priceRange = priceRange;
@@ -231,23 +275,32 @@ export default class PlaceDirectoryConcept {
       filter.hours = hours;
     }
     if (style !== undefined && style !== null) {
-      // Ensure preparationStyles is treated as an array for the $in operator.
-      // If the DB schema guarantees it's always an array, this is fine.
       filter.preparationStyles = { $in: [style] };
     }
 
     const results = await this.places.find(filter).toArray();
-    return results.map((p) => p._id);
+    return { placeIds: results.map((p) => p._id) };
   }
 
-  async get_details({ placeId }: { placeId: PlaceId }): Promise<Place | { error: string }> {
+  /**
+   * _get_details(placeId: PlaceId): Place
+   *
+   * **requires** placeId in {p.placeId | p in the set of Places}
+   * **effects** return p where p.placeId = placeId
+   *
+   * @param placeId The ID of the place to retrieve details for.
+   * @returns A dictionary with the Place object, or an error object.
+   */
+  async _get_details(
+    { placeId }: { placeId: PlaceId },
+  ): Promise<{ place: Place } | { error: string }> {
     const place = await this.places.findOne({ _id: placeId });
 
     if (!place) {
       return { error: `Place with ID ${placeId} not found.` };
     }
 
-    return place;
+    return { place };
   }
 }
 ```

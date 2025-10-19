@@ -5,28 +5,28 @@
 ```
 running 1 test from ./src/concepts/PlaceDirectory/PlaceDirectoryConcept.test.ts
 PlaceDirectoryConcept ...
-  create_place - successful creation ... ok (71ms)
+  create_place - successful creation ... ok (497ms)
   create_place - requires non-empty name and address ... ok (0ms)
-  edit_place - successful edit ... ok (74ms)
-  edit_place - updating only some fields ... ok (78ms)
-  edit_place - placeId not found ... ok (18ms)
-  delete_place - successful deletion ... ok (77ms)
+  edit_place - successful edit ... ok (102ms)
+  edit_place - updating only some fields ... ok (459ms)
+  edit_place - placeId not found ... ok (16ms)
+  delete_place - successful deletion ... ok (374ms)
   delete_place - placeId not found ... ok (18ms)
-  find_nearby - finds places within radius ... ok (241ms)
-  find_nearby - requires radius > 0 ... ok (1ms)
-  search_by_name - finds places with matching name ... ok (192ms)
-  filter_places - filters by price range ... ok (433ms)
-  filter_places - filters by hours ... ok (286ms)
-  filter_places - filters by style ... ok (129ms)
-  filter_places - combines filters ... ok (463ms)
-  get_details - retrieves correct place details ... ok (98ms)
-  get_details - placeId not found ... ok (18ms)
+  _find_nearby - finds places within radius ... ok (157ms)
+  _find_nearby - requires radius > 0 ... ok (0ms)
+  _search_by_name - finds places with matching name ... ok (398ms)
+  _filter_places - filters by price range ... ok (473ms)
+  _filter_places - filters by hours ... ok (120ms)
+  _filter_places - filters by style ... ok (123ms)
+  _filter_places - combines filters ... ok (393ms)
+  _get_details - retrieves correct place details ... ok (83ms)
+  _get_details - placeId not found ... ok (306ms)
   principle: places store structured metadata and can be discovered through search and location-based queries ...
 ------- post-test output -------
-Principle verified: Places store metadata - Discoverable by name, location, and attributes
+✓ Principle verified: Places store metadata → Discoverable by name, location, and attributes
 ----- post-test output end -----
-  principle: places store structured metadata and can be discovered through search and location-based queries ... ok (468ms)
-PlaceDirectoryConcept ... ok (3s)
+  principle: places store structured metadata and can be discovered through search and location-based queries ... ok (545ms)
+PlaceDirectoryConcept ... ok (5s)
 ```
 
 ## Test Coverage Analysis

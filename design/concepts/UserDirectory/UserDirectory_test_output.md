@@ -5,22 +5,27 @@
 ```
 running 1 test from ./src/concepts/UserDirectory/UserDirectoryConcept.test.ts
 UserDirectoryConcept ...
-  register_user should create a new user ... ok (75ms)
-  register_user should fail if user already exists ... ok (58ms)
-  register_user should fail with empty displayName or email ... ok (60ms)
-  save_place should add a place to a user's saved places ... ok (177ms)
-  save_place should not add a place if it's already saved ... ok (143ms)
-  save_place should fail if user not found ... ok (18ms)
-  unsave_place should remove a place from a user's saved places ... ok (271ms)
-  unsave_place should fail if user not found ... ok (20ms)
-  unsave_place should fail if place not saved ... ok (108ms)
-  update_preferences should update a user's preferences ... ok (168ms)
-  update_preferences should fail if user not found ... ok (29ms)
-  get_saved_places should return the saved places for a user ... ok (153ms)
-  get_saved_places should return an empty array for a user with no saved places ... ok (59ms)
-  get_saved_places should fail if user not found ... ok (19ms)
-  principle: each user maintains independent saved places and preferences ... ok (319ms)
-UserDirectoryConcept ... ok (2s)
+  register_user should create a new user ... ok (146ms)
+  register_user should return error if user already exists ... ok (53ms)
+  register_user should return error with empty displayName or email ... ok (32ms)
+  save_place should add a place to a user's saved places ... ok (471ms)
+  save_place should not add a place if it's already saved ... ok (223ms)
+  save_place should return error if user not found ... ok (17ms)
+  unsave_place should remove a place from a user's saved places ... ok (571ms)
+  unsave_place should return error if user not found ... ok (21ms)
+  unsave_place should return error if place not saved ... ok (303ms)
+  update_preferences should update a user's preferences ... ok (476ms)
+  update_preferences should return error if user not found ... ok (16ms)
+  _get_saved_places should return the saved places for a user ... ok (336ms)
+  _get_saved_places should return an empty array for a user with no saved places ... ok (135ms)
+  _get_saved_places should return error if user not found ... ok (16ms)
+  variant: preferences can be simple key-value pairs or complex nested structures ...
+------- post-test output -------
+✓ Variant verified: Preferences support both simple and complex structures
+----- post-test output end -----
+  variant: preferences can be simple key-value pairs or complex nested structures ... ok (653ms)
+  principle: each user maintains independent saved places and preferences ... ok (1s)
+UserDirectoryConcept ... ok (5s)
 ```
 
 ## Test Coverage Analysis

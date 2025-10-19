@@ -3,38 +3,48 @@
 ## Detailed Test Output
 
 ```
-running 4 tests from ./src/concepts/ExperienceLog/ExperienceLogConcept.test.ts
+running 5 tests from ./src/concepts/ExperienceLog/ExperienceLogConcept.test.ts
 ExperienceLog - Create, Update, Delete Logs ...
-  should create a log ... ok (194ms)
-  should throw error for invalid rating ... ok (0ms)
-  should throw error for invalid sweetness ... ok (0ms)
-  should throw error for invalid strength ... ok (0ms)
-  should update a log ... ok (40ms)
-  should throw error when updating non-existent log ... ok (18ms)
-  should delete a log ... ok (233ms)
-  should throw error when deleting non-existent log ... ok (18ms)
+  create_log should create a log ... ok (341ms)
+  create_log should return error for invalid rating ... ok (0ms)
+  create_log should return error for invalid sweetness ... ok (0ms)
+  create_log should return error for invalid strength ... ok (0ms)
+  update_log should update a log ... ok (36ms)
+  update_log should return error when updating non-existent log ... ok (17ms)
+  update_log should return error for invalid rating in update ... ok (0ms)
+  delete_log should delete a log ... ok (187ms)
+  delete_log should return error when deleting non-existent log ... ok (17ms)
 ExperienceLog - Create, Update, Delete Logs ... ok (1s)
 ExperienceLog - Getters and Queries ...
-  get_user_logs should return all logs for a user ... ok (16ms)
-  get_place_logs should return logs for a specific user and place ... ok (16ms)
-  get_average_rating should calculate the average rating correctly ... ok (64ms)
-  get_tried_places should return unique places a user has visited ... ok (73ms)
+  _get_user_logs should return all logs for a user ... ok (22ms)
+  _get_place_logs should return logs for a specific user and place ... ok (18ms)
+  _get_average_rating should calculate the average rating correctly ... ok (67ms)
+  _get_tried_places should return unique places a user has visited ... ok (48ms)
 ExperienceLog - Getters and Queries ... ok (1s)
 ExperienceLog - Operational Principle ...
-  principle: experiences are logged with ratings and attributes, then summarized by AI ...
+  principle: experiences are logged with ratings and attributes, enabling queries and AI-generated summaries ...
 ------- output -------
-Principle verified: Experiences logged - Statistics computed - AI summary generated
+✓ Principle verified: Experiences logged → Statistics computed → AI summary generated from actual data
 ----- output end -----
-  principle: experiences are logged with ratings and attributes, then summarized by AI ... ok (569ms)
+  principle: experiences are logged with ratings and attributes, enabling queries and AI-generated summaries ... ok (789ms)
 ExperienceLog - Operational Principle ... ok (1s)
+ExperienceLog - Variant: Minimal vs Detailed Logs ...
+  variant: logs can be created with minimal required fields or with full optional details ...
+------- output -------
+✓ Variant verified: Logs work with minimal required fields or full optional details
+----- output end -----
+  variant: logs can be created with minimal required fields or with full optional details ... ok (463ms)
+ExperienceLog - Variant: Minimal vs Detailed Logs ... ok (1s)
 ExperienceLog - AI Profile Summary ...
-  should generate a profile summary using LLM ... ok (18ms)
-  should throw error if no logs exist for user ... ok (16ms)
+  should generate a profile summary using LLM ... ok (17ms)
+  should return error if no logs exist for user ... ok (16ms)
   should handle validation errors gracefully ...
 ------- output -------
 ⚠️ Validator warning: Summary did not mention any known places (may be under-specific).
+❌ Validation failed for generated summary:
+Validator error: Detected possible fabricated place names in summary: Fake Matcha Cafe
 ----- output end -----
-  should handle validation errors gracefully ... ok (17ms)
+  should handle validation errors gracefully ... ok (18ms)
 ExperienceLog - AI Profile Summary ... ok (1s)
 ```
 
