@@ -3,139 +3,76 @@
 ## Overview
 The ExperienceLog concept manages user matcha tasting logs, allowing users to record their experiences at different places with ratings, preferences, and notes.
 
-## State
+# concept: ExperienceLog
 
-### Types
-- `LogId`: Unique identifier for a log entry
-- `UserId`: Unique identifier for a user
-- `PlaceId`: Unique identifier for a place
+* **concept** ExperienceLog[User, Place]
 
-### State Components
-- `logs`: A collection of `Log` objects, each containing:
-  - `_id`: LogId - unique identifier
-  - `userId`: UserId - the user who created the log
-  - `placeId`: PlaceId - the place being reviewed
-  - `timestamp`: Date - when the log was created
-  - `rating`: number (1-5) - overall rating of the experience
-  - `sweetness`: number (1-5) - sweetness level preference
-  - `strength`: number (1-5) - strength level preference
-  - `notes`: string (optional) - additional notes about the experience
-  - `photo`: string (optional) - URL to a photo of the experience
+* **purpose**
+    capture a user's personal experience at a place with structured ratings and notes,
+    and enable AI-powered insights about their overall preferences and trends
 
-## Actions
+* **principle**
+    each log entry represents one user's assessment of one place at a specific time;
+    users can track and reference their personal experiences;
+    an AI model can generate summaries across a user’s logs to highlight patterns
+    such as preferred sweetness, strength, or favorite places
 
-### `createLog(userId, placeId, rating, sweetness, strength, notes?, photo?)`
-Creates a new log entry for a user's experience at a place.
+* **state**
 
-**Parameters:**
-- `userId`: UserId - the user creating the log
-- `placeId`: PlaceId - the place being reviewed
-- `rating`: number - overall rating (must be 1-5)
-- `sweetness`: number - sweetness preference (must be 1-5)
-- `strength`: number - strength preference (must be 1-5)
-- `notes`: string (optional) - additional notes
-- `photo`: string (optional) - photo URL
+    a set of Logs with
+        a logId LogId
+        a userId User
+        a placeId Place
+        a timestamp DateTime
+        a rating Integer
+        sweetness Integer
+        strength Integer
+        notes optional String
+        photo optional String (URL)
 
-**Returns:** Log - the created log entry
+* **actions**
 
-**Preconditions:**
-- `rating` must be between 1 and 5
-- `sweetness` must be between 1 and 5
-- `strength` must be between 1 and 5
+    create_log(userId: User, placeId: Place, rating: Integer, sweetness: Integer, strength: Integer): LogId
+        **requires** rating is in the inclusive range [1,5]
+        **effects** adds new Log with new logId, given params, timestamp = now() to the set of Logs
 
-**Postconditions:**
-- A new log entry is added to the logs collection
-- The log has a unique `_id`
-- The log has the current timestamp
+    update_log(logId: LogId, rating?: Integer, sweetness?: Integer, strength?: Integer, notes?: String, photo?: String)
+        **requires** logId in {log.logId | log in the set of Logs} and if rating given then rating is in the inclusive range [1,5]
+        **effects** update log where log.logId = logId with non-null parameters
 
-### `updateLog(logId, updates)`
-Updates an existing log entry with new information.
+    delete_log(logId: LogId)
+        **requires** logId in {log.logId | log in Logs}
+        **effects** Logs' = Logs - {log | log.logId = logId}
 
-**Parameters:**
-- `logId`: LogId - the log to update
-- `updates`: Partial<Log> - the fields to update
+    get_user_logs(userId: User): set Log
+        **effects** return {log | log in the set of Logs and log.userId = userId}
 
-**Returns:** Log - the updated log entry
+    get_place_logs(userId: User, placeId: Place): set Log
+        **effects** return {log | log in the set of Logs and log.userId = userId and log.placeId = placeId}
 
-**Preconditions:**
-- The log with `logId` must exist
-- If updating rating, sweetness, or strength, values must be 1-5
+    delete_log(logId: LogId)
+        **requires** logId in {log.logId | log in the set of Logs}
+        **effects** updates the set of Logs such that: logs' = logs - {log | log.logId = logId}
 
-**Postconditions:**
-- The specified fields of the log are updated
-- Other fields remain unchanged
+    get_average_rating(userId: User, placeId: Place): Float
+        **effects** return average of {log.rating | log in the set of Logs and log.userId = userId and log.placeId = placeId}
 
-### `deleteLog(logId)`
-Removes a log entry from the collection.
+    get_tried_places(userId: User): set Place
+        **effects** return {log.placeId | log in Logs and log.userId = userId}
 
-**Parameters:**
-- `logId`: LogId - the log to delete
+    async generate_profile_summary(userId: User, llm: GeminiLLM): String
+        **requires** there exists at least one log in the set of Logs with log.userId = userId
+        **effects** calls llm with the user's Logs (ratings, sweetness, strength, notes, and places)
+                    and returns a concise textual summary describing the user's preferences and patterns
+        **validators**
+            - summary must not mention places not in user's logs
+            - summary must be <= 3 sentences
+            - sentiment of summary should align with overall average rating
 
-**Returns:** void
+* notes
+    This augmented version of ExperienceLog integrates an AI model (GeminiLLM)
+    to synthesize multiple logs into a readable "taste profile."
+    The summary helps users recognize long-term trends and preferences
+    that might be difficult to notice from individual entries alone.
 
-**Preconditions:**
-- The log with `logId` must exist
-
-**Postconditions:**
-- The log is removed from the logs collection
-
-## Queries
-
-### `getTriedPlaces(userId)`
-Returns all unique places a user has visited.
-
-**Parameters:**
-- `userId`: UserId - the user to query
-
-**Returns:** PlaceId[] - array of unique place IDs the user has visited
-
-### `getUserLogs(userId)`
-Returns all logs created by a specific user.
-
-**Parameters:**
-- `userId`: UserId - the user to query
-
-**Returns:** Log[] - array of all logs created by the user
-
-### `getPlaceLogs(userId, placeId)`
-Returns all logs for a specific user at a specific place.
-
-**Parameters:**
-- `userId`: UserId - the user to query
-- `placeId`: PlaceId - the place to query
-
-**Returns:** Log[] - array of logs for the user at the place
-
-### `getAverageRating(userId, placeId)`
-Calculates the average rating for a user at a specific place.
-
-**Parameters:**
-- `userId`: UserId - the user to query
-- `placeId`: PlaceId - the place to query
-
-**Returns:** number - average rating (0 if no logs exist)
-
-## AI-Augmented Actions
-
-### `generateProfileSummary(userId, llm)`
-Generates an AI-powered summary of a user's matcha tasting profile based on their logs.
-
-**Parameters:**
-- `userId`: UserId - the user to generate a summary for
-- `llm`: GeminiLLM - the LLM instance to use for generation
-
-**Returns:** string - AI-generated profile summary
-
-**Preconditions:**
-- The user must have at least one log entry
-- The LLM must be properly configured
-
-**Postconditions:**
-- A summary is generated based on the user's log history
-- The summary is validated for accuracy and appropriateness
-
-**Validation:**
-- Summary must not reference places not in the user's logs
-- Sentiment must be consistent with average ratings
-- Summary must be concise (≤3 sentences, ≤120 words)
-- Summary must end with proper punctuation
+    Any parameters marked with a ? at the end are optional.

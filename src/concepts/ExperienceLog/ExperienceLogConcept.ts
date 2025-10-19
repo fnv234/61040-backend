@@ -27,10 +27,23 @@ export interface Log {
 export default class ExperienceLogConcept {
   private logs: Collection<Log>;
 
+  /**
+   * @param db - The database connection
+   */
   constructor(private readonly db: Db) {
     this.logs = this.db.collection(PREFIX + "logs");
   }
 
+  /**
+   * @param userId - The user ID
+   * @param placeId - The place ID
+   * @param rating - The rating
+   * @param sweetness - The sweetness
+   * @param strength - The strength
+   * @param notes - The notes
+   * @param photo - The photo
+   * @returns The created log
+   */
   async createLog(
     userId: UserId,
     placeId: PlaceId,
@@ -63,6 +76,11 @@ export default class ExperienceLogConcept {
     return log;
   }
 
+  /**
+   * @param logId - The log ID
+   * @param updates - The updates to apply
+   * @returns The updated log
+   */
   async updateLog(logId: LogId, updates: Partial<Log>): Promise<Log> {
     const result = await this.logs.updateOne(
       { _id: logId },
@@ -78,6 +96,9 @@ export default class ExperienceLogConcept {
     return updatedLog;
   }
 
+  /**
+   * @param logId - The log ID
+   */
   async deleteLog(logId: LogId): Promise<void> {
     const result = await this.logs.deleteOne({ _id: logId });
     if (result.deletedCount === 0) {
@@ -85,6 +106,10 @@ export default class ExperienceLogConcept {
     }
   }
 
+  /**
+   * @param userId - The user ID
+   * @returns The tried places
+   */
   async getTriedPlaces(userId: UserId): Promise<PlaceId[]> {
     const logs = await this.logs.find({ userId }).toArray();
     const places = new Set<PlaceId>();
@@ -94,22 +119,40 @@ export default class ExperienceLogConcept {
     return Array.from(places);
   }
 
+  /**
+   * @param userId - The user ID
+   * @returns The user logs
+   */
   async getUserLogs(userId: UserId): Promise<Log[]> {
     return await this.logs.find({ userId }).toArray();
   }
 
+  /**
+   * @param userId - The user ID
+   * @param placeId - The place ID
+   * @returns The place logs
+   */
   async getPlaceLogs(userId: UserId, placeId: PlaceId): Promise<Log[]> {
     return await this.logs.find({ userId, placeId }).toArray();
   }
 
+  /**
+   * @param userId - The user ID
+   * @param placeId - The place ID
+   * @returns The average rating
+   */
   async getAverageRating(userId: UserId, placeId: PlaceId): Promise<number> {
     const logs = await this.getPlaceLogs(userId, placeId);
     if (logs.length === 0) return 0;
     return logs.reduce((sum, l) => sum + l.rating, 0) / logs.length;
   }
 
-  // AI-Augmented Action
-  // optional
+  /**
+   * This is from assignment 3 - AI-Augmented Action
+   * @param userId - The user ID
+   * @param llm - The LLM
+   * @returns The profile summary
+   */
   async generateProfileSummary(
     userId: UserId,
     llm: GeminiLLM,
