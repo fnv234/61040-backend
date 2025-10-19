@@ -1,21 +1,14 @@
-[@concept-design-overview](../../background/concept-design-overview.md)
+---
+timestamp: 'Sun Oct 19 2025 09:53:07 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_095307.8128b397.md]]'
+content_id: 39ab7f69f9ec91c58e0d942814a9ba6bf77949060e9350f39f4bf90a318e0ee1
+---
 
-[@concept-specifications](../../background/concept-specifications.md)
-
-[@implementing-concepts](../../background/implementing-concepts.md)
-
-[@no_mistakes](../../no_mistakes.md)
-
-
-# implement: UserDirectory
-
-# file: src/UserDirectory/UserDirectoryConcept.ts
-
+# file: src/concepts/UserDirectory/UserDirectoryConcept.ts
 
 ```typescript
 import { Collection, Db, WithId } from "npm:mongodb";
 import { Empty, ID } from "@utils/types.ts";
-import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
 // Generic types of this concept
 type UserId = ID;
@@ -108,12 +101,6 @@ export default class UserDirectoryConcept {
       { _id: userId },
       { $push: { savedPlaces: placeId } },
     );
-
-    // --- SYNC IMPLEMENTATION FOR SavedPlaceRecommendationSync ---
-    // Trigger a refresh for the specific user whose saved places changed.
-    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
-    // --- END SYNC IMPLEMENTATION ---
-    
     return {};
   }
 
@@ -174,12 +161,6 @@ export default class UserDirectoryConcept {
       { _id: userId },
       { $set: { preferences: newPrefs } },
     );
-
-    // --- SYNC IMPLEMENTATION FOR PreferenceRecommendationSync ---
-    // Trigger a refresh for the specific user whose preferences changed.
-    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
-    // --- END SYNC IMPLEMENTATION ---
-
     return {};
   }
 
@@ -201,4 +182,5 @@ export default class UserDirectoryConcept {
     return user.savedPlaces;
   }
 }
+
 ```

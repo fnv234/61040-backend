@@ -1,9 +1,17 @@
+---
+timestamp: 'Sun Oct 19 2025 09:53:07 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_095307.8128b397.md]]'
+content_id: 9c33c69ac4af56dbf6969ddae05a58c7cbf1d3e1264feb2c617c51c6855df275
+---
+
+# file: src/concepts/ExperienceLog/ExperienceLogConcept.ts
+
+```typescript
 import { Collection, Db } from "npm:mongodb";
 import { GeminiLLM } from "../../../gemini-llm.ts";
 import { validateGeneratedSummary } from "./validators.ts";
 import { ID } from "@utils/types.ts";
 import { freshID } from "@utils/database.ts";
-import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
 // Generic types of this concept
 type LogId = ID;
@@ -74,12 +82,6 @@ export default class ExperienceLogConcept {
     };
 
     await this.logs.insertOne(log);
-
-    // --- SYNC IMPLEMENTATION FOR ExperienceRecommendationSync ---
-    // Trigger a refresh for the specific user who logged a new experience.
-    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
-    // --- END SYNC IMPLEMENTATION ---
-    
     return log;
   }
 
@@ -228,3 +230,5 @@ export default class ExperienceLogConcept {
     return summary;
   }
 }
+
+```

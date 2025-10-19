@@ -444,6 +444,7 @@ Deno.test("PlaceDirectoryConcept", async (t) => {
 });
 ```
 # trace:
+
 /*
 1. **Create a place**: Use `create_place` to add a new matcha-serving location with specific details.
 2. **Retrieve details**: Use `get_details` to confirm the place was created correctly and its attributes are stored.

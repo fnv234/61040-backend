@@ -93,6 +93,7 @@ import { GeminiLLM } from "../../../gemini-llm.ts";
 import { validateGeneratedSummary } from "./validators.ts";
 import { ID } from "@utils/types.ts";
 import { freshID } from "@utils/database.ts";
+import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
 // Generic types of this concept
 type LogId = ID;
@@ -163,6 +164,12 @@ export default class ExperienceLogConcept {
     };
 
     await this.logs.insertOne(log);
+
+    // --- SYNC IMPLEMENTATION FOR ExperienceRecommendationSync ---
+    // Trigger a refresh for the specific user who logged a new experience.
+    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
+    // --- END SYNC IMPLEMENTATION ---
+    
     return log;
   }
 

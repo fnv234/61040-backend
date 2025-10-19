@@ -3,9 +3,8 @@
 ## Overview
 This document outlines the changes made to the PlaceDirectory concept during implementation and testing.
 
-
 ## Major Changes
-Added edit_place, delete_place, and filter_places. Next, I go into detail about other changes:
+Added edit_place, delete_place, and filter_places to the PlaceDirectory concept, as suggested in assignment 2 feedback. Next, I go into detail about other changes:
 
 ### 1. Database Integration
 **Original Design**: In-memory data structures
@@ -16,16 +15,7 @@ Added edit_place, delete_place, and filter_places. Next, I go into detail about 
 - Made all methods async to handle database operations
 - Added proper error handling with `{error: string}` return types
 
-### 2. Geospatial Query Simplification
-**Original Design**: Intended to use MongoDB's `$nearSphere` for location-based searches
-**Implementation**: Simplified distance calculation for testing purposes
-
-**Changes Made**:
-- Replaced geospatial queries with simple Euclidean distance calculation
-- Avoided the need for MongoDB geospatial indexes
-- Used rough conversion factor (1 degree ≈ 111 km) for distance approximation
-
-### 3. Photos Field Implementation
+### 2. Photos Field Implementation
 **Original Design**: Optional photos field in place data
 **Implementation**: Proper handling of photos array in create and edit operations
 
@@ -34,7 +24,7 @@ Added edit_place, delete_place, and filter_places. Next, I go into detail about 
 - Updated `edit_place` to handle photos field updates
 - Ensured photos array is properly stored and retrieved
 
-### 4. Error Handling Standardization
+### 3. Error Handling Standardization
 **Original Design**: Mixed error handling approaches
 **Implementation**: Consistent `{error: string}` return types for business logic errors
 
@@ -56,10 +46,6 @@ Added edit_place, delete_place, and filter_places. Next, I go into detail about 
 ### 3. Photos Field Testing
 **Issue**: Photos field not being properly tested and validated
 **Solution**: Added comprehensive testing for photos array creation, storage, and retrieval
-
-### 4. Geospatial Index Requirements
-**Issue**: MongoDB geospatial queries require complex index setup
-**Solution**: Implemented simplified distance calculation for testing environment
 
 ## Testing Coverage
 
