@@ -1,14 +1,9 @@
-[@implementation](implementation.md)
+---
+timestamp: 'Fri Oct 17 2025 11:47:07 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251017_114707.ed819a91.md]]'
+content_id: ff818ecb1c5024e58cd6bce07e182415f4f6a7ea4ff533783215f335921cbceb
+---
 
-[@testing-concepts](../../background/testing-concepts.md)
-
-[@no_mistakes](../../no_mistakes.md)
-
-
-
-# test: UserDirectory
-
-# file: src/UserDirectory/UserDirectoryConcept.test.ts
 # response:
 
 ```typescript

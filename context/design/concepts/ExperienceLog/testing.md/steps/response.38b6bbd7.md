@@ -1,13 +1,9 @@
-[@implementation](implementation.md)
+---
+timestamp: 'Fri Oct 17 2025 11:46:51 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251017_114651.e2d4386d.md]]'
+content_id: 38b6bbd736c7bf8513ba3a8655cd29a30d7f21f3ab0aad97e7bb40fcdc5d4859
+---
 
-[@testing-concepts](../../background/testing-concepts.md)
-
-[@no_mistakes](../../no_mistakes.md)
-
-
-# test: ExperienceLog
-
-# file: src/ExperienceLog/ExperienceLogConcept.test.ts
 # response:
 
 ```typescript
@@ -383,5 +379,3 @@ Deno.test("ExperienceLog - AI Profile Summary", async (t) => {
   await client.close();
 });
 ```
-
-# trace:
