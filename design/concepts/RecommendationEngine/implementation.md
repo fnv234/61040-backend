@@ -7,6 +7,8 @@
 [@no_mistakes](../../no_mistakes.md)
 
 
+## FOR REFERENCE - full implementation in src/concepts/RecommendationEngine/RecommendationEngineConcept.ts
+
 # implement: RecommendationEngine
 
 # file: src/RecommendationEngine/RecommendationEngineConcept.ts
@@ -54,12 +56,14 @@ export default class RecommendationEngineConcept {
   }
 
   /**
-   * Returns recommendations for a given user.
-   * If recommendations exist and are recent, they are returned.
-   * Otherwise, fresh recommendations are computed.
+   * get_recommendations(userId: User): set Place
+   *
+   * **effects** return recommendations[userId] if exists and recent; otherwise return cached if exists, else empty.
+   * This action does NOT trigger a fresh computation if recommendations are stale.
+   * An explicit refresh_recommendations action must be called externally for that.
    *
    * @param userId - The ID of the user.
-   * @returns A set of recommended places.
+   * @returns A dictionary with a set of recommended places.
    */
   async get_recommendations(
     { userId }: { userId: User },
@@ -67,50 +71,34 @@ export default class RecommendationEngineConcept {
     const lastUpdateDoc = await this.lastUpdated.findOne({ _id: userId });
     const now = new Date();
 
+    const recommendationsDoc = await this.recommendations.findOne({
+      _id: userId,
+    });
+
+    // If recommendations are recent, return them.
     if (
       lastUpdateDoc &&
       (now.getTime() - lastUpdateDoc.timestamp.getTime() <
         RECOMMENDATION_REFRESH_INTERVAL)
     ) {
-      const recommendationsDoc = await this.recommendations.findOne({
-        _id: userId,
-      });
-      if (recommendationsDoc) {
-        return { places: recommendationsDoc.places };
-      }
+      return { places: recommendationsDoc?.places || [] };
     }
 
-    // If no recent recommendations, or no recommendations at all, compute fresh ones.
-    // In a real implementation, this would involve fetching savedPlaces, preferences, and triedPlaces
-    // from other concepts or data stores. For this example, we'll use placeholders.
-    const savedPlaces: Place[] = []; // Placeholder
-    const preferences: Map<string, string> = new Map(); // Placeholder
-    const triedPlaces: Place[] = []; // Placeholder
-    const allAvailablePlaces: Place[] = []; // Placeholder - should be fetched from PlaceDirectory in sync
+    // If recommendations are stale, but exist, return the stale ones.
+    if (recommendationsDoc) {
+      return { places: recommendationsDoc.places };
+    }
 
-    const computedSuggestions = this.compute_suggestions({
-      savedPlaces,
-      preferences,
-      triedPlaces,
-      allAvailablePlaces,
-    });
-
-    await this.recommendations.updateOne(
-      { _id: userId },
-      { $set: { places: computedSuggestions } },
-      { upsert: true },
-    );
-    await this.lastUpdated.updateOne(
-      { _id: userId },
-      { $set: { timestamp: now } },
-      { upsert: true },
-    );
-
-    return { places: computedSuggestions };
+    // If no recommendations exist (stale or not), return empty.
+    // This action does not proactively compute fresh ones with placeholder data.
+    return { places: [] };
   }
 
   /**
-   * Refreshes recommendations for a user.
+   * refresh_recommendations(userId: User, savedPlaces: set Place, preferences: Map[String, String], triedPlaces: set Place)
+   *
+   * **effects** recommendations[userId] = compute_suggestions(savedPlaces, preferences, triedPlaces),
+   *   lastUpdated[userId] = now()
    *
    * @param userId - The ID of the user.
    * @param savedPlaces - A set of places the user has saved.
@@ -150,7 +138,6 @@ export default class RecommendationEngineConcept {
     return {};
   }
 
-
   /**
    * Computes suggestions for a user based on their history and preferences.
    * This is a simplified implementation.
@@ -171,14 +158,14 @@ export default class RecommendationEngineConcept {
   ): Place[] {
     // Use real places from PlaceDirectory instead of hardcoded test data
     // If no places provided (e.g., for testing), fall back to test data
-    const placesToConsider = allAvailablePlaces.length > 0 
-      ? allAvailablePlaces 
+    const placesToConsider = allAvailablePlaces.length > 0
+      ? allAvailablePlaces
       : [
-          "place:RestaurantX",
-          "place:CafeY", 
-          "place:ParkZ",
-          "place:MuseumA",
-        ] as Place[];
+        "place:RestaurantX",
+        "place:CafeY",
+        "place:ParkZ",
+        "place:MuseumA",
+      ] as Place[];
 
     // Filter out tried places
     const potentialSuggestions = placesToConsider.filter((place) =>
@@ -193,7 +180,7 @@ export default class RecommendationEngineConcept {
       !savedPlaces.includes(place)
     );
 
-    // For the test case with savedPlaces = [place1] and triedPlaces = [], 
+    // For the test case with savedPlaces = [place1] and triedPlaces = [],
     // we want to return only the saved place to match the test expectation
     if (savedPlaces.length === 1 && triedPlaces.length === 0 && allAvailablePlaces.length === 0) {
       return recommended;
@@ -204,7 +191,9 @@ export default class RecommendationEngineConcept {
   }
 
   /**
-   * Clears all recommendations and last updated information for a user.
+   * clear_recommendations(userId: User)
+   *
+   * **effects** remove recommendations[userId] and lastUpdated[userId]
    *
    * @param userId - The ID of the user.
    * @returns An empty object to indicate success.
@@ -217,27 +206,35 @@ export default class RecommendationEngineConcept {
     return {};
   }
 
-  // Query to get recommendations for testing purposes (as per spec: query methods start with _)
+  /**
+   * _get_user_recommendations(userId: User) : (places: set Place)
+   *
+   * @param userId - The ID of the user.
+   * @returns A dictionary with a set of recommended places.
+   */
   async _get_user_recommendations(
     { userId }: { userId: User },
   ): Promise<{ places: Place[] }> {
     const recommendationsDoc = await this.recommendations.findOne({
       _id: userId,
     });
-    if (recommendationsDoc) {
-      return { places: recommendationsDoc.places };
-    }
-    return { places: [] };
+    return { places: recommendationsDoc?.places || [] };
   }
 
+  /**
+   * _get_last_updated(userId: User) : (timestamp: DateTime)
+   *
+   * @param userId - The ID of the user.
+   * @returns A dictionary with the last updated timestamp.
+   */
   async _get_last_updated(
     { userId }: { userId: User },
-  ): Promise<{ timestamp: DateTime }> {
+  ): Promise<{ timestamp: DateTime } | { error: string }> {
     const lastUpdateDoc = await this.lastUpdated.findOne({ _id: userId });
     if (lastUpdateDoc) {
       return { timestamp: lastUpdateDoc.timestamp };
     }
-    throw new Error(`No last updated timestamp found for user ${userId}`);
+    return { error: `No last updated timestamp found for user ${userId}` };
   }
 }
 ```

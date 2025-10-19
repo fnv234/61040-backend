@@ -59,6 +59,7 @@ Deno.test("RecommendationEngine", async (t) => {
       const lastUpdated = await recommendationEngine._get_last_updated({
         userId: userA,
       });
+      if ("error" in lastUpdated) throw new Error(lastUpdated.error);
       assertEquals(lastUpdated.timestamp instanceof Date, true);
 
       // Get recommendations again, should use cache
@@ -104,6 +105,7 @@ Deno.test("RecommendationEngine", async (t) => {
 
       const lastUpdatedAfterRefresh = await recommendationEngine
         ._get_last_updated({ userId: userA });
+      if ("error" in lastUpdatedAfterRefresh) throw new Error(lastUpdatedAfterRefresh.error);
       // The timestamp should have updated
       assertEquals(
         lastUpdatedAfterRefresh.timestamp.getTime() >
@@ -133,15 +135,15 @@ Deno.test("RecommendationEngine", async (t) => {
       timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
     }); // 2 days ago
 
-    // Calling get_recommendations should now compute fresh ones because the timestamp is old
-    const freshRecommendations = await recommendationEngine.get_recommendations(
+    // Calling get_recommendations should return the stale recommendations since
+    // get_recommendations no longer computes fresh ones automatically
+    const staleRecommendations = await recommendationEngine.get_recommendations(
       { userId: userB },
     );
-    // compute_suggestions for userB with these inputs should return all places since placeholders are empty
+    // Should return the stale recommendations we seeded
     assertEquals(
-      freshRecommendations.places.sort(),
-      ["place:CafeY", "place:MuseumA", "place:ParkZ", "place:RestaurantX"]
-        .sort(),
+      staleRecommendations.places.sort(),
+      ["place:X", "place:Y"].sort(),
     );
   });
 
@@ -172,20 +174,12 @@ Deno.test("RecommendationEngine", async (t) => {
     });
     assertEquals(recommendations.places, []);
 
-    try {
-      await recommendationEngine._get_last_updated({ userId: userA });
-      // If we reach here, it means _get_last_updated did not throw, which is an error.
-      assertEquals(
-        true,
-        false,
-        "Expected _get_last_updated to throw after clear_recommendations",
-      );
-    } catch (e) {
-      assertEquals(
-        (e as Error).message.includes("No last updated timestamp found"),
-        true,
-      );
-    }
+    const lastUpdatedResult = await recommendationEngine._get_last_updated({ userId: userA });
+    assertEquals(
+      "error" in lastUpdatedResult && lastUpdatedResult.error.includes("No last updated timestamp found"),
+      true,
+      "Expected _get_last_updated to return error after clear_recommendations",
+    );
   });
 
   await client.close();

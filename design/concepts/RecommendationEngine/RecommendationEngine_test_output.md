@@ -5,12 +5,12 @@
 ```
 running 1 test from ./src/concepts/RecommendationEngine/RecommendationEngineConcept.test.ts
 RecommendationEngine ...
-  initial state: no recommendations ... ok (16ms)
-  principle: recommendations are computed and cached ... ok (146ms)
-  principle: recommendations refresh when user behavior changes warrant ... ok (71ms)
-  get_recommendations fetches fresh if stale ... ok (93ms)
-  clear_recommendations removes user data ... ok (136ms)
-RecommendationEngine ... ok (948ms)
+  initial state: no recommendations ... ok (17ms)
+  principle: recommendations are computed and cached ... ok (141ms)
+  principle: recommendations refresh when user behavior changes warrant ... ok (94ms)
+  get_recommendations fetches fresh if stale ... ok (147ms)
+  clear_recommendations removes user data ... ok (125ms)
+RecommendationEngine ... ok (1s)
 ```
 
 ## Test Coverage Analysis

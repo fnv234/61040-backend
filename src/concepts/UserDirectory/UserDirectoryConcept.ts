@@ -1,4 +1,4 @@
-import { Collection, Db, WithId } from "npm:mongodb";
+import { Collection, Db } from "npm:mongodb";
 import { Empty, ID } from "@utils/types.ts";
 import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
@@ -28,11 +28,15 @@ export default class UserDirectoryConcept {
   }
 
   /**
-   * Registers a new user with the provided details.
+   * register_user(userId: UserId, displayName: String, email: String): UserId
+   *
+   * **requires** userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
+   * **effects** adds new User with given attributes and empty savedPlaces, preferences to the set of Users
+   *
    * @param userId The unique identifier for the user.
    * @param displayName The display name of the user.
    * @param email The email address of the user.
-   * @returns The userId of the newly registered user, or an error object.
+   * @returns A dictionary with the userId of the newly registered user, or an error object.
    */
   async register_user({
     userId,
@@ -42,8 +46,7 @@ export default class UserDirectoryConcept {
     userId: UserId;
     displayName: string;
     email: string;
-  }): Promise<UserId | { error: string }> {
-    // requires: userId not in {u.userId | u in the set of Users} and displayName, email are non-empty
+  }): Promise<{ userId: UserId } | { error: string }> {
     const existingUser = await this.users.findOne({ _id: userId });
     if (existingUser) {
       return { error: `User with userId ${userId} already exists.` };
@@ -60,16 +63,19 @@ export default class UserDirectoryConcept {
       savedPlaces: [], // initialized as empty
     };
 
-    // effects: adds new User with given attributes and empty savedPlaces, preferences to the set of Users
     await this.users.insertOne(newUser);
-    return userId;
+    return { userId };
   }
 
   /**
-   * Saves a place for a given user.
+   * save_place(userId: UserId, placeId: PlaceId)
+   *
+   * **requires** userId in {u.userId | u in the set of Users}
+   * **effects** update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces + {placeId}
+   *
    * @param userId The ID of the user.
    * @param placeId The ID of the place to save.
-   * @returns An empty object if successful, or an error object.
+   * @returns An empty dictionary if successful, or an error object.
    */
   async save_place({
     userId,
@@ -78,35 +84,36 @@ export default class UserDirectoryConcept {
     userId: UserId;
     placeId: PlaceId;
   }): Promise<Empty | { error: string }> {
-    // requires: userId in {u.userId | u in the set of Users}
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
       return { error: `User with userId ${userId} not found.` };
     }
 
-    // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces + {placeId}
     if (user.savedPlaces.includes(placeId)) {
-      // Place is already saved, no change needed, but not an error.
-      return {};
+      return {}; // Already saved, no change needed.
     }
+
     await this.users.updateOne(
       { _id: userId },
       { $push: { savedPlaces: placeId } },
     );
 
     // --- SYNC IMPLEMENTATION FOR SavedPlaceRecommendationSync ---
-    // Trigger a refresh for the specific user whose saved places changed.
-    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
+    await refreshRecommendationsAfterNewLog(this.db, userId);
     // --- END SYNC IMPLEMENTATION ---
-    
+
     return {};
   }
 
   /**
-   * Unsaves a place for a given user.
+   * unsave_place(userId: UserId, placeId: PlaceId)
+   *
+   * **requires** userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
+   * **effects** update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
+   *
    * @param userId The ID of the user.
    * @param placeId The ID of the place to unsave.
-   * @returns An empty object if successful, or an error object.
+   * @returns An empty dictionary if successful, or an error object.
    */
   async unsave_place({
     userId,
@@ -115,7 +122,6 @@ export default class UserDirectoryConcept {
     userId: UserId;
     placeId: PlaceId;
   }): Promise<Empty | { error: string }> {
-    // requires: userId in {u.userId | u in the set of Users} and placeId in user.savedPlaces
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
       return { error: `User with userId ${userId} not found.` };
@@ -127,7 +133,6 @@ export default class UserDirectoryConcept {
       };
     }
 
-    // effects: update user u where u.userId = userId: u.savedPlaces' = u.savedPlaces - {placeId}
     await this.users.updateOne(
       { _id: userId },
       { $pull: { savedPlaces: placeId } },
@@ -136,10 +141,14 @@ export default class UserDirectoryConcept {
   }
 
   /**
-   * Updates the preferences for a given user.
+   * update_preferences(userId: UserId, newPrefs: Map[String, String])
+   *
+   * **requires** userId in {u.userId | u in the set of Users}
+   * **effects** update user u where u.userId = userId: u.preferences' = newPrefs
+   *
    * @param userId The ID of the user.
    * @param newPrefs The new preferences map.
-   * @returns An empty object if successful, or an error object.
+   * @returns An empty dictionary if successful, or an error object.
    */
   async update_preferences({
     userId,
@@ -148,41 +157,40 @@ export default class UserDirectoryConcept {
     userId: UserId;
     newPrefs: Record<string, string>;
   }): Promise<Empty | { error: string }> {
-    // requires: userId in {u.userId | u in the set of Users}
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
       return { error: `User with userId ${userId} not found.` };
     }
 
-    // effects: update user u where u.userId = userId: u.preferences' = newPrefs
     await this.users.updateOne(
       { _id: userId },
       { $set: { preferences: newPrefs } },
     );
 
     // --- SYNC IMPLEMENTATION FOR PreferenceRecommendationSync ---
-    // Trigger a refresh for the specific user whose preferences changed.
-    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
+    await refreshRecommendationsAfterNewLog(this.db, userId);
     // --- END SYNC IMPLEMENTATION ---
 
     return {};
   }
 
   /**
-   * Retrieves the saved places for a given user.
+   * _get_saved_places(userId: UserId): set PlaceId
+   *
+   * **requires** userId in {u.userId | u in the set of Users}
+   * **effects** return u.savedPlaces where u.userId = userId
+   *
    * @param userId The ID of the user.
-   * @returns A set of PlaceIds, or an error object.
+   * @returns A dictionary with a set of PlaceIds, or an error object.
    */
-  async get_saved_places(
+  async _get_saved_places(
     { userId }: { userId: UserId },
-  ): Promise<PlaceId[] | { error: string }> {
-    // requires: userId in {u.userId | u in the set of Users}
+  ): Promise<{ placeIds: PlaceId[] } | { error: string }> {
     const user = await this.users.findOne({ _id: userId });
     if (!user) {
       return { error: `User with userId ${userId} not found.` };
     }
 
-    // effects: return u.savedPlaces where u.userId = userId
-    return user.savedPlaces;
+    return { placeIds: user.savedPlaces };
   }
 }
