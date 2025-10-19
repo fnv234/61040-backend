@@ -1,3 +1,12 @@
+---
+timestamp: 'Fri Oct 17 2025 11:46:51 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251017_114651.e2d4386d.md]]'
+content_id: ba336c5a46bf9a4b0e03585a72f7047f4be5f227c94b49fb9638c4428aeca7a0
+---
+
+# file: src/ExperienceLog/ExperienceLogConcept.ts
+
+```typescript
 import { Collection, Db } from "npm:mongodb";
 import { GeminiLLM } from "../../../gemini-llm.ts";
 import { validateGeneratedSummary } from "./validators.ts";
@@ -109,7 +118,6 @@ export default class ExperienceLogConcept {
   }
 
   // AI-Augmented Action
-  // optional
   async generateProfileSummary(
     userId: UserId,
     llm: GeminiLLM,
@@ -178,3 +186,4 @@ export default class ExperienceLogConcept {
     return summary;
   }
 }
+```
