@@ -45,7 +45,7 @@ Firstly, see the concept-specific changes in the concept-specific design changes
 
 ## Pointers to Interesting Moments
 
-1. **Initial Implementation Challenges**: The first time I tried creating implementations for my concepts, they were pretty incorrect / had a lot of errors. This was an interesting moment for me as I had to try to understand how to correctly prompt/provide context in order for the implementations to be accurate.
+1. **Initial Implementation Challenges**: The first time I tried creating implementations for my concepts, they were pretty incorrect/had a lot of errors. This was an interesting moment for me as I had to try to understand how to correctly prompt/provide context in order for the implementations to be accurate.
    - **Moment captured**: [context/design/concepts/UserDirectory/implementation.md/steps/response.166fd57b.md](../context/design/concepts/UserDirectory/implementation.md/steps/response.166fd57b.md) - Shows the initial implementation with detailed review of error handling and return type issues
    - **Early test attempt**: [context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md](../context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md) - First test implementation with synchronous operations that needed to be converted to async
 
@@ -78,7 +78,7 @@ Firstly, see the concept-specific changes in the concept-specific design changes
    - **Cleanup pattern**: [context/design/concepts/RecommendationEngine/testing.md/20251019_102239.d7bd1e95.md](../context/design/concepts/RecommendationEngine/testing.md/20251019_102239.d7bd1e95.md) - Implementing database cleanup in tests
 
 9. **AI Validation Robustness**: The ExperienceLog's AI-generated summary validation was too strict for testing. I simplified the validation tests to check for error presence rather than exact error messages, making tests more resilient to minor variations.
-   - **Moment captured**: [context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md](../context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md) vs. [context/design/concepts/ExperienceLog/testing.md/steps/response.6d76b65d.md](..context/design/concepts/ExperienceLog/testing.md/steps/response.6d76b65d.md) - Adjusting validation tests for robustness
+   - **Moment captured**: [context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md](../context/design/concepts/ExperienceLog/testing.md/steps/response.434a4562.md) vs. [context/design/concepts/ExperienceLog/testing.md/steps/response.6d76b65d.md](../context/design/concepts/ExperienceLog/testing.md/steps/response.6d76b65d.md) - Adjusting validation tests for robustness
    - **Validation logic**: [context/design/concepts/ExperienceLog/ExperienceLog_design_changes.md/steps/_.e00a35b9.md](../context/design/concepts/ExperienceLog/ExperienceLog_design_changes.md/steps/_.e00a35b9.md) - Design changes for validation approach
 
 10. **Recommendation Algorithm Alignment**: The RecommendationEngine's `compute_suggestions` method needed alignment with test expectations. I refined the logic to handle specific test scenarios while maintaining the core recommendation functionality.
