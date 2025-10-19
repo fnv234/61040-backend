@@ -1,16 +1,10 @@
-[@concept-design-overview](../../background/concept-design-overview.md)
-
-[@concept-specifications](../../background/concept-specifications.md)
-
-[@implementing-concepts](../../background/implementing-concepts.md)
-
-[@no_mistakes](../../no_mistakes.md)
-
-
-# implement: UserDirectory
+---
+timestamp: 'Sun Oct 19 2025 10:24:45 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_102445.b750f800.md]]'
+content_id: 90e2f0aaa23ddb32458b44e2790b2e1d34a84dc4a90839192b3a7020696b8fb7
+---
 
 # file: src/UserDirectory/UserDirectoryConcept.ts
-
 
 ```typescript
 import { Collection, Db, WithId } from "npm:mongodb";

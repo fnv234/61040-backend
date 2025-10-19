@@ -1,16 +1,10 @@
-[@concept-design-overview](../../background/concept-design-overview.md)
+---
+timestamp: 'Sun Oct 19 2025 09:53:07 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_095307.8128b397.md]]'
+content_id: 2bf8f7b0f943a7c2ae1813980350efda94f3c9c3fa307383bef7be1df4906618
+---
 
-[@concept-specifications](../../background/concept-specifications.md)
-
-[@implementing-concepts](../../background/implementing-concepts.md)
-
-[@no_mistakes](../../no_mistakes.md)
-
-
-# implement: RecommendationEngine
-
-# file: src/RecommendationEngine/RecommendationEngineConcept.ts
-# response:
+# file: src/concepts/RecommendationEngine/RecommendationEngineConcept.ts
 
 ```typescript
 import { Collection, Db } from "npm:mongodb";
@@ -240,4 +234,5 @@ export default class RecommendationEngineConcept {
     throw new Error(`No last updated timestamp found for user ${userId}`);
   }
 }
+
 ```

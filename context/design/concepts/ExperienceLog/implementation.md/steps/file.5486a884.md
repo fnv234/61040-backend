@@ -1,3 +1,12 @@
+---
+timestamp: 'Sun Oct 19 2025 10:14:29 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_101429.47b618ac.md]]'
+content_id: 5486a8841ba0b6f4e88de8e73f470685f2426a6736249a53b5b0c6812ec57936
+---
+
+# file: src/ExperienceLog/ExperienceLogConcept.ts
+
+```typescript
 import { Collection, Db } from "npm:mongodb";
 import { GeminiLLM } from "../../../gemini-llm.ts";
 import { validateGeneratedSummary } from "./validators.ts";
@@ -228,3 +237,4 @@ export default class ExperienceLogConcept {
     return summary;
   }
 }
+```

@@ -1,15 +1,9 @@
-[@concept-design-overview](../../background/concept-design-overview.md)
+---
+timestamp: 'Sun Oct 19 2025 10:22:39 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_102239.d7bd1e95.md]]'
+content_id: 023725e9c25a7b3aac81c187bd5f9eb7e31ee7c26352978a9365e22259d5cfa5
+---
 
-[@concept-specifications](../../background/concept-specifications.md)
-
-[@implementing-concepts](../../background/implementing-concepts.md)
-
-[@no_mistakes](../../no_mistakes.md)
-
-
-# implement: RecommendationEngine
-
-# file: src/RecommendationEngine/RecommendationEngineConcept.ts
 # response:
 
 ```typescript

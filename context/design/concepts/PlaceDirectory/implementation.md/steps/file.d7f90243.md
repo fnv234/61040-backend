@@ -1,5 +1,14 @@
+---
+timestamp: 'Sun Oct 19 2025 10:16:37 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_101637.505c2664.md]]'
+content_id: d7f902432c178bfad1f53973fbda771862650c7e0c208f6c58c5c1216fb3d10f
+---
+
+# file: src/PlaceDirectory/PlaceDirectoryConcept.ts
+
+```typescript
 import { Collection, Db } from "npm:mongodb";
-import { Empty, ID } from "@utils/types.ts"; // Assuming Empty is Record<PropertyKey, never>
+import { ID } from "@utils/types.ts"; 
 import { freshID } from "@utils/database.ts";
 import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
@@ -236,3 +245,4 @@ export default class PlaceDirectoryConcept {
     return place;
   }
 }
+```

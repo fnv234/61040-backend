@@ -1,7 +1,15 @@
+---
+timestamp: 'Sun Oct 19 2025 09:53:07 GMT-0400 (Eastern Daylight Time)'
+parent: '[[../20251019_095307.8128b397.md]]'
+content_id: cdae35ece89b09cc8f4657ea5c7bc94447d24d9ba5fd418cf0f1226994cbf9e5
+---
+
+# file: src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts
+
+```typescript
 import { Collection, Db } from "npm:mongodb";
-import { Empty, ID } from "@utils/types.ts"; // Assuming Empty is Record<PropertyKey, never>
+import { ID } from "@utils/types.ts"; 
 import { freshID } from "@utils/database.ts";
-import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
 // Generic types of this concept
 type PlaceId = ID;
@@ -73,21 +81,6 @@ export default class PlaceDirectoryConcept {
     };
 
     await this.places.insertOne(newPlace);
-
-    // --- SYNC IMPLEMENTATION FOR GlobalPlaceRecommendationSync ---
-    // When a new place is added, we need to re-evaluate recommendations for all users.
-    // This is a potentially expensive operation if you have many users.
-    // In a real-world scenario, you might want to use a job queue or a more sophisticated approach.
-    // For this example, we'll iterate through all users and trigger a refresh.
-
-    const allUsers = await this.db.collection("UserDirectory.users").find({}).toArray(); // Assuming user collection name
-    for (const user of allUsers) {
-      // Trigger a refresh for each user.
-      // Note: This assumes refreshRecommendationsAfterNewLog can be called without a specific log event,
-      // which it currently can. If not, you might need a dedicated `triggerGlobalRefresh` function.
-      await refreshRecommendationsAfterNewLog(this.db, user._id.toString() as ID);
-    }
-    // --- END SYNC IMPLEMENTATION ---
     return placeId;
   }
 
@@ -236,3 +229,5 @@ export default class PlaceDirectoryConcept {
     return place;
   }
 }
+
+```

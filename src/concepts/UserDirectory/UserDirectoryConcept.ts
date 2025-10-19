@@ -1,5 +1,6 @@
 import { Collection, Db, WithId } from "npm:mongodb";
 import { Empty, ID } from "@utils/types.ts";
+import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts";
 
 // Generic types of this concept
 type UserId = ID;
@@ -92,6 +93,12 @@ export default class UserDirectoryConcept {
       { _id: userId },
       { $push: { savedPlaces: placeId } },
     );
+
+    // --- SYNC IMPLEMENTATION FOR SavedPlaceRecommendationSync ---
+    // Trigger a refresh for the specific user whose saved places changed.
+    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
+    // --- END SYNC IMPLEMENTATION ---
+    
     return {};
   }
 
@@ -152,6 +159,12 @@ export default class UserDirectoryConcept {
       { _id: userId },
       { $set: { preferences: newPrefs } },
     );
+
+    // --- SYNC IMPLEMENTATION FOR PreferenceRecommendationSync ---
+    // Trigger a refresh for the specific user whose preferences changed.
+    await refreshRecommendationsAfterNewLog(this.db, userId as ID);
+    // --- END SYNC IMPLEMENTATION ---
+
     return {};
   }
 
