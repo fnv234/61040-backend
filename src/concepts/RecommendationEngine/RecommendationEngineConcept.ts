@@ -90,21 +90,25 @@ export default class RecommendationEngineConcept {
    * @param allAvailablePlaces - All places available for recommendation (from PlaceDirectory).
    * @returns An empty object to indicate success.
    */
-  async refresh_recommendations(
-    { userId, savedPlaces, preferences, triedPlaces, allAvailablePlaces }: {
+  async refresh_recommendations({
+      userId,
+      savedPlaces = [],
+      preferences = new Map(),
+      triedPlaces = [],
+      allAvailablePlaces = [],
+    }: {
       userId: User;
-      savedPlaces: Place[];
-      preferences: Map<string, string>;
-      triedPlaces: Place[];
-      allAvailablePlaces: Place[];
-    },
-  ): Promise<Record<PropertyKey, never>> {
-    const computedSuggestions = this.compute_suggestions({
-      savedPlaces,
-      preferences,
-      triedPlaces,
-      allAvailablePlaces,
-    });
+      savedPlaces?: Place[];
+      preferences?: Map<string, string>;
+      triedPlaces?: Place[];
+      allAvailablePlaces?: Place[];
+    }): Promise<Record<PropertyKey, never>> {
+      const computedSuggestions = this.compute_suggestions({
+        savedPlaces,
+        preferences,
+        triedPlaces,
+        allAvailablePlaces,
+      });
 
     const now = new Date();
     await this.recommendations.updateOne(
@@ -139,6 +143,11 @@ export default class RecommendationEngineConcept {
       allAvailablePlaces: Place[];
     },
   ): Place[] {
+    allAvailablePlaces = allAvailablePlaces ?? [];
+    triedPlaces = triedPlaces ?? [];
+    savedPlaces = savedPlaces ?? [];
+    preferences = preferences ?? new Map();
+    
     // Use real places from PlaceDirectory instead of hardcoded test data
     // If no places provided (e.g., for testing), fall back to test data
     const placesToConsider = allAvailablePlaces.length > 0
