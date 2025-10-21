@@ -5,7 +5,13 @@
  * Set the GOOGLE_PLACES_API_KEY environment variable.
  */
 
-const GOOGLE_PLACES_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY") || "AIzaSyCJd_BgINcrz_IM2-YtuZCERyAPs1-lpMk";
+const GOOGLE_PLACES_API_KEY = Deno.env.get("GOOGLE_PLACES_API_KEY");
+
+if (!GOOGLE_PLACES_API_KEY) {
+  console.error("ERROR: GOOGLE_PLACES_API_KEY environment variable is not set!");
+  console.error("Please set it before running the server:");
+  console.error("export GOOGLE_PLACES_API_KEY='your-api-key-here'");
+}
 const PLACES_API_URL = "https://maps.googleapis.com/maps/api/place";
 
 export interface GooglePlace {
