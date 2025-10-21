@@ -23,7 +23,6 @@ const CONCEPTS_DIR = "src/concepts";
 async function main() {
   const [db] = await getDb();
   const app = new Hono();
-
   app.get("/", (c) => c.text("Concept Server is running."));
 
   // --- Dynamic Concept Loading and Routing ---
