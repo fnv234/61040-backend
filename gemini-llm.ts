@@ -42,25 +42,20 @@ export class GeminiLLM {
         }    }
 }
 
-// Mock LLM for testing purposes
 export const mockLLM = (): GeminiLLM => {
-  let mockResponse = "Mock response";
-  let mockCalls: any[] = [];
+  class MockGemini extends GeminiLLM {
+    mockResponse = "Mock response";
+    mockCalls: any[] = [];
 
-  const executeLLM = (prompt: string) => {
-    mockCalls.push({ args: [prompt] });
-    return Promise.resolve(mockResponse);
-  };
+    async executeLLM(prompt: string): Promise<string> {
+      this.mockCalls.push(prompt);
+      return this.mockResponse;
+    }
 
-  // Add mock methods to the function
-  (executeLLM as any).mockResolvedValue = (value: string) => {
-    mockResponse = value;
-  };
-  (executeLLM as any).mock = {
-    calls: mockCalls
-  };
+    mockResolvedValue(value: string) {
+      this.mockResponse = value;
+    }
+  }
 
-  return {
-    executeLLM: executeLLM as any,
-  } as GeminiLLM;
+  return new MockGemini({ apiKey: "mock" });
 };

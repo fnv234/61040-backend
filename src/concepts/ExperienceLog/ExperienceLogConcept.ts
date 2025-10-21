@@ -253,13 +253,23 @@ export default class ExperienceLogConcept {
    * @returns A dictionary with the profile summary string, or an error object.
    */
   async generate_profile_summary(
-    { userId, llm }: { userId: UserId; llm: GeminiLLM },
+    { userId, llm }: { userId: UserId; llm?: GeminiLLM },
   ): Promise<{ summary: string } | { error: string }> {
     const logsResult = await this._get_user_logs({ userId });
     const logs = logsResult.logs;
     if (logs.length === 0) {
       return { error: "No logs for this user" };
     }
+
+    // Create LLM instance if not provided (for API calls)
+    if (!llm) {
+      const apiKey = Deno.env.get("GEMINI_API_KEY");
+      if (!apiKey) {
+        return { error: "GEMINI_API_KEY environment variable is not set. Cannot generate summary." };
+      }
+      llm = new GeminiLLM({ apiKey });
+    }
+    const geminiLLM = llm;
 
     const avgRating = logs.reduce((sum, l) => sum + l.rating, 0) / logs.length;
     const avgSweetness = logs.reduce((sum, l) => sum + l.sweetness, 0) /
@@ -303,7 +313,7 @@ export default class ExperienceLogConcept {
         - Keep <= 3 sentences.
         `;
 
-    const response = await llm.executeLLM(prompt);
+    const response = await geminiLLM.executeLLM(prompt);
     const summary = response.trim();
 
     try {
