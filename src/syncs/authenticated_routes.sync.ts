@@ -4,9 +4,12 @@
  * 
  * TODO: Add Authenticating/Sessioning concept for proper authentication.
  * For now, these syncs simply pass through the requests.
+ * 
+ * NOTE: These syncs use the instrumented concept instances from @concepts,
+ * which are already connected to the database and the sync engine.
  */
 
-import { actions, Sync } from "@engine";
+import { actions, Sync, Frames } from "@engine";
 import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, RecommendationEngine } from "@concepts";
 
 // ============================================================================
@@ -40,8 +43,10 @@ export const DeleteLogRequest: Sync = ({ request, logId }) => ({
 export const GetUserLogsRequest: Sync = ({ request, userId, logs }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_user_logs", userId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(ExperienceLog._get_user_logs, { userId }, { logs });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const result = await ExperienceLog._get_user_logs({ userId: userIdValue });
+    return new Frames({ ...originalFrame, [logs]: result.logs });
   },
   then: actions([Requesting.respond, { request, logs }]),
 });
@@ -49,8 +54,11 @@ export const GetUserLogsRequest: Sync = ({ request, userId, logs }) => ({
 export const GetPlaceLogsRequest: Sync = ({ request, userId, placeId, logs }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_place_logs", userId, placeId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(ExperienceLog._get_place_logs, { userId, placeId }, { logs });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const placeIdValue = originalFrame[placeId];
+    const result = await ExperienceLog._get_place_logs({ userId: userIdValue, placeId: placeIdValue });
+    return new Frames({ ...originalFrame, [logs]: result.logs });
   },
   then: actions([Requesting.respond, { request, logs }]),
 });
@@ -58,8 +66,11 @@ export const GetPlaceLogsRequest: Sync = ({ request, userId, placeId, logs }) =>
 export const GetAverageRatingRequest: Sync = ({ request, userId, placeId, averageRating }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_average_rating", userId, placeId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(ExperienceLog._get_average_rating, { userId, placeId }, { averageRating });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const placeIdValue = originalFrame[placeId];
+    const result = await ExperienceLog._get_average_rating({ userId: userIdValue, placeId: placeIdValue });
+    return new Frames({ ...originalFrame, [averageRating]: result.averageRating });
   },
   then: actions([Requesting.respond, { request, averageRating }]),
 });
@@ -67,8 +78,10 @@ export const GetAverageRatingRequest: Sync = ({ request, userId, placeId, averag
 export const GetTriedPlacesRequest: Sync = ({ request, userId, places }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_tried_places", userId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(ExperienceLog._get_tried_places, { userId }, { places });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const result = await ExperienceLog._get_tried_places({ userId: userIdValue });
+    return new Frames({ ...originalFrame, [places]: result.places });
   },
   then: actions([Requesting.respond, { request, places }]),
 });
@@ -140,8 +153,13 @@ export const UpdatePreferencesRequest: Sync = ({ request, userId, newPrefs }) =>
 export const GetSavedPlacesRequest: Sync = ({ request, userId, placeIds }) => ({
   when: actions([Requesting.request, { path: "/UserDirectory/_get_saved_places", userId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(UserDirectory._get_saved_places, { userId }, { placeIds });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const result = await UserDirectory._get_saved_places({ userId: userIdValue });
+    if ('error' in result) {
+      return new Frames({ ...originalFrame, [placeIds]: [] });
+    }
+    return new Frames({ ...originalFrame, [placeIds]: result.placeIds });
   },
   then: actions([Requesting.respond, { request, placeIds }]),
 });
@@ -153,8 +171,10 @@ export const GetSavedPlacesRequest: Sync = ({ request, userId, placeIds }) => ({
 export const GetRecommendationsRequest: Sync = ({ request, userId, places }) => ({
   when: actions([Requesting.request, { path: "/RecommendationEngine/get_recommendations", userId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(RecommendationEngine.get_recommendations, { userId }, { places });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const result = await RecommendationEngine.get_recommendations({ userId: userIdValue });
+    return new Frames({ ...originalFrame, [places]: result.places });
   },
   then: actions([Requesting.respond, { request, places }]),
 });
@@ -186,8 +206,10 @@ export const ClearRecommendationsRequest: Sync = ({ request, userId }) => ({
 export const GetUserRecommendationsRequest: Sync = ({ request, userId, places }) => ({
   when: actions([Requesting.request, { path: "/RecommendationEngine/_get_user_recommendations", userId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(RecommendationEngine._get_user_recommendations, { userId }, { places });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const result = await RecommendationEngine._get_user_recommendations({ userId: userIdValue });
+    return new Frames({ ...originalFrame, [places]: result.places });
   },
   then: actions([Requesting.respond, { request, places }]),
 });
@@ -195,8 +217,10 @@ export const GetUserRecommendationsRequest: Sync = ({ request, userId, places })
 export const GetLastUpdatedRequest: Sync = ({ request, userId, lastUpdated }) => ({
   when: actions([Requesting.request, { path: "/RecommendationEngine/_get_last_updated", userId }, { request }]),
   where: async (frames) => {
-    frames = await frames.query(RecommendationEngine._get_last_updated, { userId }, { lastUpdated });
-    return frames;
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const result = await RecommendationEngine._get_last_updated({ userId: userIdValue });
+    return new Frames({ ...originalFrame, [lastUpdated]: result.lastUpdated });
   },
   then: actions([Requesting.respond, { request, lastUpdated }]),
 });
