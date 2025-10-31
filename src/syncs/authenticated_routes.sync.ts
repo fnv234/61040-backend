@@ -126,12 +126,17 @@ export const GetTriedPlacesRequest: Sync = ({ request, userId, places }) => ({
   then: actions([Requesting.respond, { request, places }]),
 });
 
-export const GenerateProfileSummaryRequest: Sync = ({ request, userId, summary }) => ({
+export const GenerateProfileSummaryRequest: Sync = ({ request, userId }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/generate_profile_summary", userId }, { request }]),
-  then: actions(
-    [ExperienceLog.generate_profile_summary, { userId }, { summary }],
-    [Requesting.respond, { request, summary }]
+  then: actions([ExperienceLog.generate_profile_summary, { userId }]),
+});
+
+export const GenerateProfileSummaryResponse: Sync = ({ request, summary }) => ({
+  when: actions(
+    [Requesting.request, { path: "/ExperienceLog/generate_profile_summary" }, { request }],
+    [ExperienceLog.generate_profile_summary, {}, { summary }]
   ),
+  then: actions([Requesting.respond, { request, summary }]),
 });
 
 // ============================================================================
