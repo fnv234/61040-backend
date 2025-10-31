@@ -25,12 +25,14 @@
  */
 
 export const inclusions: Record<string, string> = {
-  // Feel free to delete these example inclusions
-  "/api/LikertSurvey/_getSurveyQuestions": "this is a public query",
-  "/api/LikertSurvey/_getSurveyResponses": "responses are public",
-  "/api/LikertSurvey/_getRespondentAnswers": "answers are visible",
-  "/api/LikertSurvey/submitResponse": "allow anyone to submit response",
-  "/api/LikertSurvey/updateResponse": "allow anyone to update their response",
+  // Public queries - no authentication needed
+  "/api/PlaceDirectory/_find_nearby": "public query to find nearby matcha places",
+  "/api/PlaceDirectory/_search_by_name": "public query to search places by name",
+  "/api/PlaceDirectory/_filter_places": "public query to filter places",
+  "/api/PlaceDirectory/_get_details": "public query to get place details",
+  
+  // User registration - must be public to allow new users
+  "/api/UserDirectory/register_user": "allow new users to register",
 };
 
 /**
@@ -44,7 +46,32 @@ export const inclusions: Record<string, string> = {
  */
 
 export const exclusions: Array<string> = [
-  // Feel free to delete these example exclusions
-  "/api/LikertSurvey/createSurvey",
-  "/api/LikertSurvey/addQuestion",
+  // ExperienceLog - all require authentication
+  "/api/ExperienceLog/create_log",
+  "/api/ExperienceLog/update_log",
+  "/api/ExperienceLog/delete_log",
+  "/api/ExperienceLog/_get_user_logs",
+  "/api/ExperienceLog/_get_place_logs",
+  "/api/ExperienceLog/_get_average_rating",
+  "/api/ExperienceLog/_get_tried_places",
+  "/api/ExperienceLog/generate_profile_summary",
+  
+  // PlaceDirectory - write operations require authentication
+  "/api/PlaceDirectory/create_place",
+  "/api/PlaceDirectory/edit_place",
+  "/api/PlaceDirectory/delete_place",
+  
+  // UserDirectory - user-specific operations require authentication
+  "/api/UserDirectory/save_place",
+  "/api/UserDirectory/unsave_place",
+  "/api/UserDirectory/update_preferences",
+  "/api/UserDirectory/_get_saved_places",
+  
+  // RecommendationEngine - all require authentication
+  "/api/RecommendationEngine/get_recommendations",
+  "/api/RecommendationEngine/refresh_recommendations",
+  "/api/RecommendationEngine/compute_suggestions",
+  "/api/RecommendationEngine/clear_recommendations",
+  "/api/RecommendationEngine/_get_user_recommendations",
+  "/api/RecommendationEngine/_get_last_updated",
 ];
