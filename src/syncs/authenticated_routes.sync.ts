@@ -16,20 +16,44 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ExperienceLog Routes
 // ============================================================================
 
-export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo, log }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes, photo }, { request }]),
-  then: actions(
-    [ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }, { log }],
-    [Requesting.respond, { request, log }]
-  ),
+export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes }, { request }]),
+  where: async (frames) => {
+    // Add photo to frame if it doesn't exist (default to null)
+    if (!(photo in frames[0])) {
+      frames[0][photo] = null;
+    }
+    return frames;
+  },
+  then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
 });
 
-export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo, log }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId, rating, sweetness, strength, notes, photo }, { request }]),
-  then: actions(
-    [ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }, { log }],
-    [Requesting.respond, { request, log }]
+export const CreateLogResponse: Sync = ({ request, logId }) => ({
+  when: actions(
+    [Requesting.request, { path: "/ExperienceLog/create_log" }, { request }],
+    [ExperienceLog.create_log, {}, { logId }]
   ),
+  then: actions([Requesting.respond, { request, logId }]),
+});
+
+export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
+  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId, rating, sweetness, strength, notes }, { request }]),
+  where: async (frames) => {
+    // Add photo to frame if it doesn't exist (default to null)
+    if (!(photo in frames[0])) {
+      frames[0][photo] = null;
+    }
+    return frames;
+  },
+  then: actions([ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }]),
+});
+
+export const UpdateLogResponse: Sync = ({ request, log }) => ({
+  when: actions(
+    [Requesting.request, { path: "/ExperienceLog/update_log" }, { request }],
+    [ExperienceLog.update_log, {}, { log }]
+  ),
+  then: actions([Requesting.respond, { request, log }]),
 });
 
 export const DeleteLogRequest: Sync = ({ request, logId }) => ({
