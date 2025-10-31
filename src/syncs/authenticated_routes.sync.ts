@@ -17,9 +17,12 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ============================================================================
 
 export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes }, { request }]),
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength }, { request }]),
   where: async (frames) => {
-    // Add photo to frame if it doesn't exist (default to null)
+    // Add optional parameters to frame if they don't exist
+    if (!(notes in frames[0])) {
+      frames[0][notes] = null;
+    }
     if (!(photo in frames[0])) {
       frames[0][photo] = null;
     }
@@ -37,11 +40,24 @@ export const CreateLogResponse: Sync = ({ request, logId }) => ({
 });
 
 export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId, rating, sweetness, strength, notes }, { request }]),
+  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId }, { request }]),
   where: async (frames) => {
-    // Add photo to frame if it doesn't exist (default to null)
+    // Add optional parameters to frame if they don't exist
+    // All update fields are optional
+    if (!(rating in frames[0])) {
+      frames[0][rating] = undefined;
+    }
+    if (!(sweetness in frames[0])) {
+      frames[0][sweetness] = undefined;
+    }
+    if (!(strength in frames[0])) {
+      frames[0][strength] = undefined;
+    }
+    if (!(notes in frames[0])) {
+      frames[0][notes] = undefined;
+    }
     if (!(photo in frames[0])) {
-      frames[0][photo] = null;
+      frames[0][photo] = undefined;
     }
     return frames;
   },
