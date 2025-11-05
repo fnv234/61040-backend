@@ -1,7 +1,7 @@
 # 6.104 Assignment 4: Implementing Concepts
 
 ## Final Design Document
-put link here
+[@design-doc](./final_design_doc.md)
 
 ## Reflections
 [@reflections](./reflections.md)
@@ -10,4 +10,4 @@ put link here
 put link here
 
 ## Trace of Actions
-put link here - from demo
+[@trace](./actions_trace.md)

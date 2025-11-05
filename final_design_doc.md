@@ -12,7 +12,7 @@
  ## Differences vs. Initial Concept (A2)
  
  - **Persistence layer**
-   - A2 assumed in‑memory or naïve persistence. Final design adopts MongoDB across concepts.
+   - A2 assumed in‑memory or naive persistence. My final design adopts MongoDB across concepts.
    - See `design/design_updates.md` ("Database Integration Refactoring"). Implementations live in `src/concepts/**`.
    - Impact: async/await throughout, DB lifecycle handling, and test isolation requirements.
  
@@ -64,16 +64,7 @@
    - Scores by preferences, ratings/popularity, distance, and saved/tried places.
    - Refreshed via syncs described in `design/design_updates.md`.
  
- - **Sync patterns** — `src/syncs/authenticated_routes.sync.ts`
-   - Keep `when` minimal; default optional params in `where`.
-   - Split long operations into request/response, e.g., `GenerateProfileSummary*`.
-   - Extract runtime values in `where` for user‑specific queries before calling concept methods.
- 
  ## Notable Design Changes (with rationale)
- 
- - **Request/Response sync split**
-   - Rationale: Avoids timeouts for LLM or other slow operations; clarifies causality.
-   - Files: `src/syncs/authenticated_routes.sync.ts` (create/update log response pairs, profile summary pairs).
  
  - **Optional parameter handling**
    - Rationale: `when` matching must not depend on optional inputs; defaults applied in `where` prevent non‑matches.
@@ -90,29 +81,6 @@
  - **Find nearby simplification**
    - Rationale: Reduce infra overhead for geospatial indexes while preserving expected UX.
    - Files: `src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts`; notes in `design/design_updates.md` and `design/design_changes.md`.
- 
- ## Trade‑offs & Alternatives
- 
- - **200 + `{ error }` vs. 4xx**
-   - Chosen to maintain backward compatibility during rapid iteration; frontend normalizes. Future: standardize to proper 4xx.
- 
- - **Client‑side auto‑register vs. server‑side upsert**
-   - Current approach avoids invasive backend changes late in the cycle. Alternative: perform upsert in `save_place`.
- 
- - **Manual sync wiring vs. stricter contracts**
-   - Present design favors velocity. Alternative: formal schemas (OpenAPI/zod) and contract tests across services.
- 
- ## Deployment & Ops
- 
- - **Backend**: Render (`https://matchamatch-backend.onrender.com`), environment variables documented in code (e.g., `GEMINI_API_KEY`).
- - **Frontend**: Uses `VITE_API_BASE_URL` to target backend; logs assist with diagnostics.
- - **Observability**: Extensive console logs; `curl` repros used to validate prod behavior.
- 
- ## Outcomes vs. Goals
- 
- - **Delivered**: Saved places, logs (create/update/delete), recommendations, AI summary, robust sync behavior.
- - **Improved**: Operational reliability (timeouts removed), error transparency, and user identity handling.
- - **Deferred**: Full server‑side upsert on save, formal schemas, and cross‑service contract tests.
  
  ## References
  
