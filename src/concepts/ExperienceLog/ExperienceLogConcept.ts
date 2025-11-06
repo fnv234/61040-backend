@@ -80,7 +80,10 @@ export default class ExperienceLogConcept {
     await this.logs.insertOne(log);
 
     // --- SYNC IMPLEMENTATION FOR ExperienceRecommendationSync ---
-    await refreshRecommendationsAfterNewLog(this.db, userId);
+    // Make refresh non-blocking to prevent timeouts
+    refreshRecommendationsAfterNewLog(this.db, userId).catch(error => {
+      console.error('Background refresh failed:', error);
+    });
     // --- END SYNC IMPLEMENTATION ---
 
     return { logId };
