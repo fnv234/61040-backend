@@ -39,39 +39,6 @@ export const CreateLogResponse: Sync = ({ request, logId }) => ({
   then: actions([Requesting.respond, { request, logId }]),
 });
 
-export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId }, { request }]),
-  where: async (frames) => {
-    // Add optional parameters to frame if they don't exist
-    // All update fields are optional
-    if (!(rating in frames[0])) {
-      frames[0][rating] = undefined;
-    }
-    if (!(sweetness in frames[0])) {
-      frames[0][sweetness] = undefined;
-    }
-    if (!(strength in frames[0])) {
-      frames[0][strength] = undefined;
-    }
-    if (!(notes in frames[0])) {
-      frames[0][notes] = undefined;
-    }
-    if (!(photo in frames[0])) {
-      frames[0][photo] = undefined;
-    }
-    return frames;
-  },
-  then: actions([ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }]),
-});
-
-export const UpdateLogResponse: Sync = ({ request, log }) => ({
-  when: actions(
-    [Requesting.request, { path: "/ExperienceLog/update_log" }, { request }],
-    [ExperienceLog.update_log, {}, { log }]
-  ),
-  then: actions([Requesting.respond, { request, log }]),
-});
-
 export const DeleteLogRequest: Sync = ({ request, logId }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/delete_log", logId }, { request }]),
   then: actions(
