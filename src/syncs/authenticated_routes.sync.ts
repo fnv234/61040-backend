@@ -17,21 +17,59 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ============================================================================
 
 export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes, photo }, { request }]),
-  then: async (frames) => {
-    const frame = frames[0];
-    const logData = {
-      userId: frame[userId],
-      placeId: frame[placeId],
-      rating: frame[rating],
-      sweetness: frame[sweetness],
-      strength: frame[strength],
-      notes: (notes in frame) ? frame[notes] : undefined,
-      photo: (photo in frame) ? frame[photo] : undefined,
-    };
-    const result = await ExperienceLog.create_log(logData);
-    return actions([Requesting.respond, { request, logId: result.logId }]);
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength }, { request }]),
+  where: async (frames) => {
+    // Add optional parameters to frame if they don't exist
+    if (!(notes in frames[0])) {
+      frames[0][notes] = null;
+    }
+    if (!(photo in frames[0])) {
+      frames[0][photo] = null;
+    }
+    return frames;
   },
+  then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
+});
+
+export const CreateLogResponse: Sync = ({ request, logId }) => ({
+  when: actions(
+    [Requesting.request, { path: "/ExperienceLog/create_log" }, { request }],
+    [ExperienceLog.create_log, {}, { logId }]
+  ),
+  then: actions([Requesting.respond, { request, logId }]),
+});
+
+export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
+  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId }, { request }]),
+  where: async (frames) => {
+    // Add optional parameters to frame if they don't exist
+    // All update fields are optional
+    if (!(rating in frames[0])) {
+      frames[0][rating] = undefined;
+    }
+    if (!(sweetness in frames[0])) {
+      frames[0][sweetness] = undefined;
+    }
+    if (!(strength in frames[0])) {
+      frames[0][strength] = undefined;
+    }
+    if (!(notes in frames[0])) {
+      frames[0][notes] = undefined;
+    }
+    if (!(photo in frames[0])) {
+      frames[0][photo] = undefined;
+    }
+    return frames;
+  },
+  then: actions([ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }]),
+});
+
+export const UpdateLogResponse: Sync = ({ request, log }) => ({
+  when: actions(
+    [Requesting.request, { path: "/ExperienceLog/update_log" }, { request }],
+    [ExperienceLog.update_log, {}, { log }]
+  ),
+  then: actions([Requesting.respond, { request, log }]),
 });
 
 export const DeleteLogRequest: Sync = ({ request, logId }) => ({
