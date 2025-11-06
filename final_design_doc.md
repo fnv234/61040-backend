@@ -55,39 +55,30 @@
  
  - **UserDirectory** — `src/concepts/UserDirectory/UserDirectoryConcept.ts`
    - User registration, preference management, saved places (`save_place`, `unsave_place`, `_get_saved_places`).
-   - Validates user existence; `save_place` is idempotent.
  
- - **PlaceDirectory** — `src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts`
-   - Nearby search via custom distance calculation (no geospatial index dependency), plus detail and search endpoints.
+- **PlaceDirectory** — `src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts`
+  - Nearby search via custom distance calculation (no geospatial index dependency), plus detail and search endpoints.
  
- - **RecommendationEngine** — `src/concepts/RecommendationEngine/**`
-   - Scores by preferences, ratings/popularity, distance, and saved/tried places.
-   - Refreshed via syncs described in `design/design_updates.md`.
+- **RecommendationEngine** — `src/concepts/RecommendationEngine/**`
+  - Scores by preferences, ratings/popularity, distance, and saved/tried places.
+  - Refreshed via syncs described in `design/design_updates.md`.
+  - New: `get_recommendations_within({ userId, allowedPlaces })` returns cached recs intersected with a provided set of place IDs (e.g., nearby). See `src/concepts/RecommendationEngine/RecommendationEngineConcept.ts`.
+  - Exposed via sync route `/RecommendationEngine/get_recommendations_within` in `src/syncs/authenticated_routes.sync.ts`.
  
- ## Notable Design Changes (with rationale)
+## Notable Design Changes (with rationale)
  
- - **Optional parameter handling**
-   - Rationale: `when` matching must not depend on optional inputs; defaults applied in `where` prevent non‑matches.
-   - Files: `CreateLogRequest`, `UpdateLogRequest` in `src/syncs/authenticated_routes.sync.ts`.
+- **User existence guarantees**
+  - Rationale: Production parity—users may exist locally but not in DB.
+  - Changes: Frontend registers on login and auto‑registers on first save if backend reports missing user. See `61040-frontend/src/views/HomeView.vue` and `.../PlaceDetailView.vue`.
  
- - **Error handling standardization**
-   - Rationale: Predictable APIs across concepts; simpler client code. See `design/design_updates.md` and concept files.
-   - Client layer converts mixed server shapes into consistent return objects.
+- **Find nearby simplification**
+  - Rationale: Reduce infra overhead for geospatial indexes while preserving expected UX.
+  - Files: `src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts`; notes in `design/design_updates.md` and `design/design_changes.md`.
  
- - **User existence guarantees**
-   - Rationale: Production parity—users may exist locally but not in DB.
-   - Changes: Frontend registers on login and auto‑registers on first save if backend reports missing user. See `61040-frontend/src/views/HomeView.vue` and `.../PlaceDetailView.vue`.
- 
- - **Find nearby simplification**
-   - Rationale: Reduce infra overhead for geospatial indexes while preserving expected UX.
-   - Files: `src/concepts/PlaceDirectory/PlaceDirectoryConcept.ts`; notes in `design/design_updates.md` and `design/design_changes.md`.
- 
- ## References
- 
- - `design/design_updates.md` — high‑level updates and sync catalog.
- - `design/design_changes.md` — detailed change notes and evidence links.
- - `design/synchronizations.md` — synchronization intent and mapping.
- - `API_SPEC.md` — endpoint catalog.
+- **Server-side location constraint for recommendations**
+  - Rationale: Prevent far-away places (e.g., other cities) from appearing in recs; enforce locality at the source.
+  - Changes: Added `get_recommendations_within` and new sync route `/RecommendationEngine/get_recommendations_within`.
+  - Frontend alignment: Views call `PlaceDirectory._find_nearby` to get `allowedPlaces`, then fetch constrained recs; client still applies a 50km filter as a guardrail.
  
  ```mermaid
  flowchart TD

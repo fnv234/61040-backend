@@ -78,6 +78,23 @@ export default class RecommendationEngineConcept {
   }
 
   /**
+   * get_recommendations_within(userId: User, allowedPlaces: set Place): set Place
+   *
+   * Returns cached recommendations intersected with an allowed set of places
+   * (e.g., those near the user's current location). Does not trigger a refresh.
+   */
+  async get_recommendations_within({ userId, allowedPlaces }: { userId: User; allowedPlaces: Place[] }): Promise<{ places: Place[] }> {
+    const recDoc = await this.recommendations.findOne({ _id: userId });
+    const cached = recDoc?.places ?? [];
+    if (!allowedPlaces || allowedPlaces.length === 0) {
+      return { places: cached };
+    }
+    const allowed = new Set(allowedPlaces);
+    const filtered = cached.filter((p) => allowed.has(p));
+    return { places: filtered };
+  }
+
+  /**
    * refresh_recommendations(userId: User, savedPlaces: set Place, preferences: Map[String, String], triedPlaces: set Place)
    *
    * **effects** recommendations[userId] = compute_suggestions(savedPlaces, preferences, triedPlaces),

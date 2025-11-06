@@ -269,3 +269,16 @@ export const GetLastUpdatedRequest: Sync = ({ request, userId, lastUpdated }) =>
   },
   then: actions([Requesting.respond, { request, lastUpdated }]),
 });
+
+// Returns recommendations intersected with the provided allowedPlaces (e.g., nearby IDs)
+export const GetRecommendationsWithinRequest: Sync = ({ request, userId, allowedPlaces, places }) => ({
+  when: actions([Requesting.request, { path: "/RecommendationEngine/get_recommendations_within", userId, allowedPlaces }, { request }]),
+  where: async (frames) => {
+    const originalFrame = frames[0];
+    const userIdValue = originalFrame[userId];
+    const allowed = originalFrame[allowedPlaces] ?? [];
+    const result = await RecommendationEngine.get_recommendations_within({ userId: userIdValue, allowedPlaces: allowed });
+    return new Frames({ ...originalFrame, [places]: result.places });
+  },
+  then: actions([Requesting.respond, { request, places }]),
+});
