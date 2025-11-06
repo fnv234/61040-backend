@@ -16,17 +16,22 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ExperienceLog Routes
 // ============================================================================
 
-export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes, photo }, { request }]),
-  then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
-});
-
-export const CreateLogResponse: Sync = ({ request, logId }) => ({
-  when: actions(
-    [Requesting.request, { path: "/ExperienceLog/create_log" }, { request }],
-    [ExperienceLog.create_log, {}, { logId }]
+export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo, logId }) => ({
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength }, { request }]),
+  where: async (frames) => {
+    const frame = frames[0];
+    // Extract optional fields from the frame if they exist, otherwise set to undefined
+    const notesValue = (notes in frame) ? frame[notes] : undefined;
+    const photoValue = (photo in frame) ? frame[photo] : undefined;
+    // Add them back to the frame
+    frame[notes] = notesValue;
+    frame[photo] = photoValue;
+    return frames;
+  },
+  then: actions(
+    [ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }, { logId }],
+    [Requesting.respond, { request, logId }]
   ),
-  then: actions([Requesting.respond, { request, logId }]),
 });
 
 export const DeleteLogRequest: Sync = ({ request, logId }) => ({
