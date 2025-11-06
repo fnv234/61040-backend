@@ -8,8 +8,9 @@
  * NOTE: These syncs use the instrumented concept instances from @concepts,
  * which are already connected to the database and the sync engine.
  */
+
 import { actions, Sync, Frames } from "@engine";
-import { Requesting, ExperienceLog } from "@concepts";
+import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, RecommendationEngine } from "@concepts";
 
 // ==============================
 // ExperienceLog Routes (Production-Safe)
