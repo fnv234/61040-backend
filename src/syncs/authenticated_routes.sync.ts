@@ -1,10 +1,10 @@
 /**
  * Synchronizations for authenticated routes.
  * These routes require user authentication before executing.
- * 
+ *
  * TODO: Add Authenticating/Sessioning concept for proper authentication.
  * For now, these syncs simply pass through the requests.
- * 
+ *
  * NOTE: These syncs use the instrumented concept instances from @concepts,
  * which are already connected to the database and the sync engine.
  */
@@ -17,8 +17,35 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ============================================================================
 
 export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes, photo }, { request }]),
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength }, { request }]),
+  where: async (frames) => {
+    const frame = frames[0];
+    // Ensure optional fields exist
+    frame[notes] = frame[notes] ?? null;
+    frame[photo] = frame[photo] ?? null;
+    return frames;
+  },
   then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
+});
+
+export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
+  when: actions([Requesting.request, { 
+    path: "/ExperienceLog/update_log", 
+    logId,
+    ...(rating !== undefined && { rating }),
+    ...(sweetness !== undefined && { sweetness }),
+    ...(strength !== undefined && { strength }),
+    ...(notes !== undefined && { notes }),
+    ...(photo !== undefined && { photo })
+  }, { request }]),
+  then: actions([ExperienceLog.update_log, { 
+    logId, 
+    ...(rating !== undefined && { rating }),
+    ...(sweetness !== undefined && { sweetness }),
+    ...(strength !== undefined && { strength }),
+    ...(notes !== undefined && { notes }),
+    ...(photo !== undefined && { photo })
+  }]),
 });
 
 export const CreateLogResponse: Sync = ({ request, logId }) => ({
@@ -27,31 +54,6 @@ export const CreateLogResponse: Sync = ({ request, logId }) => ({
     [ExperienceLog.create_log, {}, { logId }]
   ),
   then: actions([Requesting.respond, { request, logId }]),
-});
-
-export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId }, { request }]),
-  where: async (frames) => {
-    // Add optional parameters to frame if they don't exist
-    // All update fields are optional
-    if (!(rating in frames[0])) {
-      frames[0][rating] = undefined;
-    }
-    if (!(sweetness in frames[0])) {
-      frames[0][sweetness] = undefined;
-    }
-    if (!(strength in frames[0])) {
-      frames[0][strength] = undefined;
-    }
-    if (!(notes in frames[0])) {
-      frames[0][notes] = undefined;
-    }
-    if (!(photo in frames[0])) {
-      frames[0][photo] = undefined;
-    }
-    return frames;
-  },
-  then: actions([ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }]),
 });
 
 export const UpdateLogResponse: Sync = ({ request, log }) => ({
@@ -74,8 +76,7 @@ export const GetUserLogsRequest: Sync = ({ request, userId, logs }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_user_logs", userId }, { request }]),
   where: async (frames) => {
     const originalFrame = frames[0];
-    const userIdValue = originalFrame[userId];
-    const result = await ExperienceLog._get_user_logs({ userId: userIdValue });
+    const result = await ExperienceLog._get_user_logs({ userId: originalFrame[userId] });
     return new Frames({ ...originalFrame, [logs]: result.logs });
   },
   then: actions([Requesting.respond, { request, logs }]),
@@ -85,9 +86,7 @@ export const GetPlaceLogsRequest: Sync = ({ request, userId, placeId, logs }) =>
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_place_logs", userId, placeId }, { request }]),
   where: async (frames) => {
     const originalFrame = frames[0];
-    const userIdValue = originalFrame[userId];
-    const placeIdValue = originalFrame[placeId];
-    const result = await ExperienceLog._get_place_logs({ userId: userIdValue, placeId: placeIdValue });
+    const result = await ExperienceLog._get_place_logs({ userId: originalFrame[userId], placeId: originalFrame[placeId] });
     return new Frames({ ...originalFrame, [logs]: result.logs });
   },
   then: actions([Requesting.respond, { request, logs }]),
@@ -97,9 +96,7 @@ export const GetAverageRatingRequest: Sync = ({ request, userId, placeId, averag
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_average_rating", userId, placeId }, { request }]),
   where: async (frames) => {
     const originalFrame = frames[0];
-    const userIdValue = originalFrame[userId];
-    const placeIdValue = originalFrame[placeId];
-    const result = await ExperienceLog._get_average_rating({ userId: userIdValue, placeId: placeIdValue });
+    const result = await ExperienceLog._get_average_rating({ userId: originalFrame[userId], placeId: originalFrame[placeId] });
     return new Frames({ ...originalFrame, [averageRating]: result.averageRating });
   },
   then: actions([Requesting.respond, { request, averageRating }]),
@@ -109,8 +106,7 @@ export const GetTriedPlacesRequest: Sync = ({ request, userId, places }) => ({
   when: actions([Requesting.request, { path: "/ExperienceLog/_get_tried_places", userId }, { request }]),
   where: async (frames) => {
     const originalFrame = frames[0];
-    const userIdValue = originalFrame[userId];
-    const result = await ExperienceLog._get_tried_places({ userId: userIdValue });
+    const result = await ExperienceLog._get_tried_places({ userId: originalFrame[userId] });
     return new Frames({ ...originalFrame, [places]: result.places });
   },
   then: actions([Requesting.respond, { request, places }]),
