@@ -23,6 +23,7 @@ Added edit_place, delete_place, and filter_places to the PlaceDirectory concept,
 - Added `photos?: URL[]` parameter to `create_place` method
 - Updated `edit_place` to handle photos field updates
 - Ensured photos array is properly stored and retrieved
+- Added a `find_nearby` method in order to properly retrieve places to recommend
 
 ### 3. Error Handling Standardization
 **Original Design**: Mixed error handling approaches

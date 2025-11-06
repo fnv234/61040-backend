@@ -14,7 +14,7 @@
 
 ```typescript
 import { Collection, Db } from "npm:mongodb";
-import { ID } from "@utils/types.ts";
+import { Empty, ID } from "@utils/types.ts"; // Assuming Empty is Record<PropertyKey, never>
 import { freshID } from "@utils/database.ts";
 import { refreshRecommendationsAfterNewLog } from "../../syncs/recommendations.ts"; // Import the sync function
 
