@@ -17,18 +17,25 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ============================================================================
 
 export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength }, { request }]),
-  where: async (frames) => {
-    // Add optional parameters to frame if they don't exist
-    if (!(notes in frames[0])) {
-      frames[0][notes] = null;
-    }
-    if (!(photo in frames[0])) {
-      frames[0][photo] = null;
-    }
-    return frames;
-  },
-  then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
+  when: actions([Requesting.request, { 
+    path: "/ExperienceLog/create_log", 
+    userId, 
+    placeId, 
+    rating, 
+    sweetness, 
+    strength,
+    ...(notes !== undefined && { notes }),  // Only include notes if defined
+    ...(photo !== undefined && { photo })   // Only include photo if defined
+  }, { request }]),
+  then: actions([ExperienceLog.create_log, { 
+    userId, 
+    placeId, 
+    rating, 
+    sweetness, 
+    strength, 
+    ...(notes !== undefined && { notes }),  // Only include notes if defined
+    ...(photo !== undefined && { photo })   // Only include photo if defined
+  }]),
 });
 
 export const CreateLogResponse: Sync = ({ request, logId }) => ({
@@ -40,28 +47,23 @@ export const CreateLogResponse: Sync = ({ request, logId }) => ({
 });
 
 export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/update_log", logId }, { request }]),
-  where: async (frames) => {
-    // Add optional parameters to frame if they don't exist
-    // All update fields are optional
-    if (!(rating in frames[0])) {
-      frames[0][rating] = undefined;
-    }
-    if (!(sweetness in frames[0])) {
-      frames[0][sweetness] = undefined;
-    }
-    if (!(strength in frames[0])) {
-      frames[0][strength] = undefined;
-    }
-    if (!(notes in frames[0])) {
-      frames[0][notes] = undefined;
-    }
-    if (!(photo in frames[0])) {
-      frames[0][photo] = undefined;
-    }
-    return frames;
-  },
-  then: actions([ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }]),
+  when: actions([Requesting.request, { 
+    path: "/ExperienceLog/update_log", 
+    logId,
+    ...(rating !== undefined && { rating }),
+    ...(sweetness !== undefined && { sweetness }),
+    ...(strength !== undefined && { strength }),
+    ...(notes !== undefined && { notes }),
+    ...(photo !== undefined && { photo })
+  }, { request }]),
+  then: actions([ExperienceLog.update_log, { 
+    logId, 
+    ...(rating !== undefined && { rating }),
+    ...(sweetness !== undefined && { sweetness }),
+    ...(strength !== undefined && { strength }),
+    ...(notes !== undefined && { notes }),
+    ...(photo !== undefined && { photo })
+  }]),
 });
 
 export const UpdateLogResponse: Sync = ({ request, log }) => ({
