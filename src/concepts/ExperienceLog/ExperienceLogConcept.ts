@@ -89,67 +89,6 @@ export default class ExperienceLogConcept {
   }
 
   /**
-   * update_log(logId: LogId, rating?: Integer, sweetness?: Integer, strength?: Integer, notes?: String, photo?: String)
-   *
-   * **requires** logId in {log.logId | log in the set of Logs} and if rating given then rating is in the inclusive range [1,5]
-   * **effects** update log where log.logId = logId with non-null parameters
-   *
-   * @param logId - The ID of the log to update.
-   * @param updates - Partial updates for the log.
-   * @returns A dictionary with the updated log, or an error object.
-   */
-  async update_log(
-    { logId, rating, sweetness, strength, notes, photo }: {
-      logId: LogId;
-      rating?: number;
-      sweetness?: number;
-      strength?: number;
-      notes?: string;
-      photo?: string;
-    },
-  ): Promise<{ log: Log } | { error: string }> {
-    const updateFields: Partial<Log> = {};
-    if (rating !== undefined) {
-      if (rating < 1 || rating > 5) return { error: "Rating must be 1–5" };
-      updateFields.rating = rating;
-    }
-    if (sweetness !== undefined) {
-      if (sweetness < 1 || sweetness > 5) {
-        return { error: "Sweetness must be 1–5" };
-      }
-      updateFields.sweetness = sweetness;
-    }
-    if (strength !== undefined) {
-      if (strength < 1 || strength > 5) {
-        return { error: "Strength must be 1–5" };
-      }
-      updateFields.strength = strength;
-    }
-    if (notes !== undefined) updateFields.notes = notes;
-    if (photo !== undefined) updateFields.photo = photo;
-
-    if (Object.keys(updateFields).length === 0) {
-      return { error: "No update fields provided." };
-    }
-
-    const result = await this.logs.updateOne(
-      { _id: logId },
-      { $set: updateFields },
-    );
-
-    if (result.matchedCount === 0) {
-      return { error: "Log not found" };
-    }
-
-    const updatedLog = await this.logs.findOne({ _id: logId });
-    if (!updatedLog) {
-      // This case should ideally not happen if matchedCount > 0, but for type safety.
-      return { error: "Log not found after update, unexpected state." };
-    }
-    return { log: updatedLog };
-  }
-
-  /**
    * delete_log(logId: LogId)
    *
    * **requires** logId in {log.logId | log in Logs}

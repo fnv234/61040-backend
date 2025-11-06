@@ -36,10 +36,6 @@ The ExperienceLog concept manages user matcha tasting logs, allowing users to re
         **requires** rating is in the inclusive range [1,5]
         **effects** adds new Log with new logId, given params, timestamp = now() to the set of Logs
 
-    update_log(logId: LogId, rating?: Integer, sweetness?: Integer, strength?: Integer, notes?: String, photo?: String)
-        **requires** logId in {log.logId | log in the set of Logs} and if rating given then rating is in the inclusive range [1,5]
-        **effects** update log where log.logId = logId with non-null parameters
-
     delete_log(logId: LogId)
         **requires** logId in {log.logId | log in Logs}
         **effects** Logs' = Logs - {log | log.logId = logId}

@@ -96,71 +96,12 @@ export default class ExperienceLogConcept {
     await this.logs.insertOne(log);
 
     // --- SYNC IMPLEMENTATION FOR ExperienceRecommendationSync ---
-    await refreshRecommendationsAfterNewLog(this.db, userId);
+    await refreshRecommendationsAfterNewLog(this.db, userId).catch(error => {
+      console.error('[ExperienceLog] Background recommendation refresh failed:', error);
+    });
     // --- END SYNC IMPLEMENTATION ---
 
     return { logId };
-  }
-
-  /**
-   * update_log(logId: LogId, rating?: Integer, sweetness?: Integer, strength?: Integer, notes?: String, photo?: String)
-   *
-   * **requires** logId in {log.logId | log in the set of Logs} and if rating given then rating is in the inclusive range [1,5]
-   * **effects** update log where log.logId = logId with non-null parameters
-   *
-   * @param logId - The ID of the log to update.
-   * @param updates - Partial updates for the log.
-   * @returns A dictionary with the updated log, or an error object.
-   */
-  async update_log(
-    { logId, rating, sweetness, strength, notes, photo }: {
-      logId: LogId;
-      rating?: number;
-      sweetness?: number;
-      strength?: number;
-      notes?: string;
-      photo?: string;
-    },
-  ): Promise<{ log: Log } | { error: string }> {
-    const updateFields: Partial<Log> = {};
-    if (rating !== undefined) {
-      if (rating < 1 || rating > 5) return { error: "Rating must be 1–5" };
-      updateFields.rating = rating;
-    }
-    if (sweetness !== undefined) {
-      if (sweetness < 1 || sweetness > 5) {
-        return { error: "Sweetness must be 1–5" };
-      }
-      updateFields.sweetness = sweetness;
-    }
-    if (strength !== undefined) {
-      if (strength < 1 || strength > 5) {
-        return { error: "Strength must be 1–5" };
-      }
-      updateFields.strength = strength;
-    }
-    if (notes !== undefined) updateFields.notes = notes;
-    if (photo !== undefined) updateFields.photo = photo;
-
-    if (Object.keys(updateFields).length === 0) {
-      return { error: "No update fields provided." };
-    }
-
-    const result = await this.logs.updateOne(
-      { _id: logId },
-      { $set: updateFields },
-    );
-
-    if (result.matchedCount === 0) {
-      return { error: "Log not found" };
-    }
-
-    const updatedLog = await this.logs.findOne({ _id: logId });
-    if (!updatedLog) {
-      // This case should ideally not happen if matchedCount > 0, but for type safety.
-      return { error: "Log not found after update, unexpected state." };
-    }
-    return { log: updatedLog };
   }
 
   /**
@@ -269,13 +210,23 @@ export default class ExperienceLogConcept {
    * @returns A dictionary with the profile summary string, or an error object.
    */
   async generate_profile_summary(
-    { userId, llm }: { userId: UserId; llm: GeminiLLM },
+    { userId, llm }: { userId: UserId; llm?: GeminiLLM },
   ): Promise<{ summary: string } | { error: string }> {
     const logsResult = await this._get_user_logs({ userId });
     const logs = logsResult.logs;
     if (logs.length === 0) {
       return { error: "No logs for this user" };
     }
+
+    // Create LLM instance if not provided (for API calls)
+    if (!llm) {
+      const apiKey = Deno.env.get("GEMINI_API_KEY");
+      if (!apiKey) {
+        return { error: "GEMINI_API_KEY environment variable is not set. Cannot generate summary." };
+      }
+      llm = new GeminiLLM({ apiKey });
+    }
+    const geminiLLM = llm;
 
     const avgRating = logs.reduce((sum, l) => sum + l.rating, 0) / logs.length;
     const avgSweetness = logs.reduce((sum, l) => sum + l.sweetness, 0) /
@@ -319,7 +270,7 @@ export default class ExperienceLogConcept {
         - Keep <= 3 sentences.
         `;
 
-    const response = await llm.executeLLM(prompt);
+    const response = await geminiLLM.executeLLM(prompt);
     const summary = response.trim();
 
     try {
