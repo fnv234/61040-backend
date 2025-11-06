@@ -33,7 +33,7 @@
   - Designing robust sync flows with `when/where/then` responsibilities.
   - Production debugging via curl repros, dashboards, and log correlation.
   - Defensive networking: timeouts, validateStatus, and friendly error messages.
-  - Working with Context / an agentic tool to offload repetitive edits and verify changes.
+  - Working with Context / an agentic tool to offload repetitive edits and verify changes -- I enjoyed being able to "discuss" my work with an agent and also have a deeper understanding of the architecture of my application as well as edits to be made.
 - **Gaps**
   - End‑to‑end tests across deploy targets.
   - Formal schemas (zod/OpenAPI) to prevent contract drift.
