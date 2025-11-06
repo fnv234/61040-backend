@@ -38,7 +38,6 @@ export async function getPersonalizedRecommendations(
 
     const allPlacesCollection = await placeDirectory.places.find({}).toArray();
     const allAvailablePlaces = allPlacesCollection.map((place) => place._id);
-
     // Ensure recommendations are fresh before retrieving them.
     await recommendationEngine.refresh_recommendations({
       userId,
@@ -51,7 +50,6 @@ export async function getPersonalizedRecommendations(
     const recommendationsResult = await recommendationEngine
       .get_recommendations({ userId });
     const recommendations = recommendationsResult.places; // get_recommendations returns { places: Place[] }
-
     const enrichedRecommendations = await Promise.all(
       recommendations.map(async (placeId) => {
         const detailsResult = await placeDirectory._get_details({ placeId });
@@ -62,7 +60,6 @@ export async function getPersonalizedRecommendations(
     const validRecommendations = enrichedRecommendations.filter((p) =>
       p !== null
     );
-
     return {
       success: true,
       recommendations: validRecommendations,
@@ -109,7 +106,6 @@ export async function refreshRecommendationsAfterNewLog(
 
     const allPlacesCollection = await placeDirectory.places.find({}).toArray();
     const allAvailablePlaces = allPlacesCollection.map((place) => place._id);
-
     await recommendationEngine.refresh_recommendations({
       userId,
       savedPlaces,
