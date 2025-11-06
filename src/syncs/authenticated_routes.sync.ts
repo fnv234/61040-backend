@@ -17,17 +17,7 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ============================================================================
 
 export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength }, { request }]),
-  where: async (frames) => {
-    // Add optional parameters to frame if they don't exist
-    if (!(notes in frames[0])) {
-      frames[0][notes] = null;
-    }
-    if (!(photo in frames[0])) {
-      frames[0][photo] = null;
-    }
-    return frames;
-  },
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes, photo }, { request }]),
   then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
 });
 
