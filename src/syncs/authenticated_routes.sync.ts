@@ -17,25 +17,8 @@ import { Requesting, ExperienceLog, PlaceDirectory, UserDirectory, Recommendatio
 // ============================================================================
 
 export const CreateLogRequest: Sync = ({ request, userId, placeId, rating, sweetness, strength, notes, photo }) => ({
-  when: actions([Requesting.request, { 
-    path: "/ExperienceLog/create_log", 
-    userId, 
-    placeId, 
-    rating, 
-    sweetness, 
-    strength,
-    ...(notes !== undefined && { notes }),  // Only include notes if defined
-    ...(photo !== undefined && { photo })   // Only include photo if defined
-  }, { request }]),
-  then: actions([ExperienceLog.create_log, { 
-    userId, 
-    placeId, 
-    rating, 
-    sweetness, 
-    strength, 
-    ...(notes !== undefined && { notes }),  // Only include notes if defined
-    ...(photo !== undefined && { photo })   // Only include photo if defined
-  }]),
+  when: actions([Requesting.request, { path: "/ExperienceLog/create_log", userId, placeId, rating, sweetness, strength, notes, photo }, { request }]),
+  then: actions([ExperienceLog.create_log, { userId, placeId, rating, sweetness, strength, notes, photo }]),
 });
 
 export const CreateLogResponse: Sync = ({ request, logId }) => ({
@@ -56,14 +39,7 @@ export const UpdateLogRequest: Sync = ({ request, logId, rating, sweetness, stre
     ...(notes !== undefined && { notes }),
     ...(photo !== undefined && { photo })
   }, { request }]),
-  then: actions([ExperienceLog.update_log, { 
-    logId, 
-    ...(rating !== undefined && { rating }),
-    ...(sweetness !== undefined && { sweetness }),
-    ...(strength !== undefined && { strength }),
-    ...(notes !== undefined && { notes }),
-    ...(photo !== undefined && { photo })
-  }]),
+  then: actions([ExperienceLog.update_log, { logId, rating, sweetness, strength, notes, photo }]),
 });
 
 export const UpdateLogResponse: Sync = ({ request, log }) => ({
