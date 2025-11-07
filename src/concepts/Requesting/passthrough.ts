@@ -50,7 +50,6 @@ export const inclusions: Record<string, string> = {
 
 export const exclusions: Array<string> = [
   // ExperienceLog - all require authentication
-  "/api/ExperienceLog/update_log",
   "/api/ExperienceLog/delete_log",
   "/api/ExperienceLog/_get_user_logs",
   "/api/ExperienceLog/_get_place_logs",
