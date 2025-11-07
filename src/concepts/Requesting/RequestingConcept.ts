@@ -199,6 +199,31 @@ export function startRequestingServer(
     }),
   );
 
+  // Dedicated upload route for multipart/form-data image uploads
+  // Returns a data URL so the frontend can immediately use the uploaded image without persistent storage
+  app.post(`${REQUESTING_BASE_URL}/upload`, async (c) => {
+    try {
+      const form = await c.req.formData();
+      const file = form.get("photo");
+      if (!(file instanceof File)) {
+        return c.json({ error: "No photo provided under field 'photo'" }, 400);
+      }
+
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+      const base64 = btoa(binary);
+      const mime = file.type || "image/png";
+      const dataUrl = `data:${mime};base64,${base64}`;
+
+      return c.json({ url: dataUrl });
+    } catch (e) {
+      console.error("/upload error:", e);
+      return c.json({ error: "Failed to process upload" }, 500);
+    }
+  });
+
   /**
    * PASSTHROUGH ROUTES
    *
