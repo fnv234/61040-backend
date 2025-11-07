@@ -7,7 +7,7 @@
 [@reflections](./reflections.md)
 
 ## Final Demo Video
-put link here
+[@video](https://youtu.be/Zs-9NF1TXtQ)
 
 ## Trace of Actions
 [@trace](./actions_trace.md)
