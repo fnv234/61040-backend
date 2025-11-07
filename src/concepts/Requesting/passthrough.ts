@@ -33,6 +33,9 @@ export const inclusions: Record<string, string> = {
   
   // User registration - must be public to allow new users
   "/api/UserDirectory/register_user": "allow new users to register",
+
+  // ExperienceLog - allow passthrough for create to avoid sync optional binding issues
+  "/api/ExperienceLog/create_log": "direct passthrough to concept to reliably accept optional notes/photo",
 };
 
 /**
@@ -47,7 +50,6 @@ export const inclusions: Record<string, string> = {
 
 export const exclusions: Array<string> = [
   // ExperienceLog - all require authentication
-  "/api/ExperienceLog/create_log",
   "/api/ExperienceLog/update_log",
   "/api/ExperienceLog/delete_log",
   "/api/ExperienceLog/_get_user_logs",
