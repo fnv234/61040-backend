@@ -3,7 +3,7 @@
 ## What Was Hard vs. Easy
 
 - **Hard**
-  - **Sync patterns**: Long‑running tasks (e.g., `generate_profile_summary`) required splitting into request/response syncs. Including optional fields (e.g., `notes`, `photo`) in `when` caused non‑matches and timeouts that had to be resolved.
+  - **Sync patterns**: Long‑running tasks (e.g., `generate_profile_summary`) required splitting into request/response syncs. Including optional fields (e.g., `notes`, `photo`) in `when` caused non‑matches and timeouts that had to be resolved. Also, deciding which actions should be authenticated and which should be directly passed through was a bit of a challenge at times.
   - **Prod vs local parity**: Unregistered users in prod led to successful `save_place` responses but empty reads from `_get_saved_places`.
   - **Error surfacing**: Backends returning `{ error }` with 200 forced explicit frontend checks and safer defaults.
   - **Identity continuity**: Keeping `userId` consistent across localStorage, store, and backend collections.
