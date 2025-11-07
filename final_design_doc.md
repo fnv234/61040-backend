@@ -8,6 +8,7 @@
  - **Operational robustness**: split long operations into request/response sync pairs, add defensive error handling, and increase observability.
  - **Data and contracts**: migrate to MongoDB, standardize error returns, and normalize API responses on the client.
  - **User identity coherence**: ensure consistent user presence and behavior across environments.
+ - **UI development**: Added editable badges for sweetness and strength preferences, allowed for display of uploaded photos and notes to place details page, and coordinated color scheme (as well as improved font use).
  
  ## Differences vs. Initial Concept (A2)
  
@@ -19,7 +20,6 @@
  - **Synchronization model**
    - A2 implicitly used one sync per route. Final design splits some routes into explicit request/response pairs to avoid timeouts and clarify data flow.
      - Example: `GenerateProfileSummaryRequest` + `GenerateProfileSummaryResponse` in `src/syncs/authenticated_routes.sync.ts`.
-   - Optional parameters (e.g., `notes`, `photo`) are removed from `when` and defaulted in `where` to prevent non‑matching frames (timeouts).
  
  - **Inter‑concept triggers**
    - Final design formalizes five cross‑concept syncs (see `design/design_updates.md`):
@@ -79,12 +79,3 @@
   - Rationale: Prevent far-away places (e.g., other cities) from appearing in recs; enforce locality at the source.
   - Changes: Added `get_recommendations_within` and new sync route `/RecommendationEngine/get_recommendations_within`.
   - Frontend alignment: Views call `PlaceDirectory._find_nearby` to get `allowedPlaces`, then fetch constrained recs; client still applies a 50km filter as a guardrail.
- 
- ```mermaid
- flowchart TD
-   A[View Action] --> B[Requesting.request]
-   B --> C{Sync: when}
-   C -->|where defaulting| D[Concept method]
-   D --> E[Sync: respond]
-   E --> F[Requesting.respond]
- ```
